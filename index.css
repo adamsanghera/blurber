@@ -32,6 +32,11 @@
   width: fit-content;
 }
 
+.menu-button:hover {
+  background-color: rgb(255, 211, 134);
+  color: rgb(157, 27, 27);
+}
+
 .blurbs {
   border: 1.5px black solid;
   margin: 2.5%;
