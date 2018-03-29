@@ -1,4 +1,4 @@
-package main
+package subscription
 
 type SubscriptionLedger interface {
 	AddSub(follower string, leader string)

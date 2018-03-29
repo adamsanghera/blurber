@@ -1,10 +1,10 @@
-package main
+package registration
 
 import (
 	"crypto/rand"
 	"encoding/hex"
 	"errors"
-	"sync"
+	"log"
 	"time"
 )
 
@@ -22,27 +22,35 @@ type Token struct {
 }
 
 type LocalUserLedger struct {
-	usLock  sync.Mutex
-	userSet map[string]User
-	userID  map[string]string
+	userSet  map[string]User
+	userID   map[string]string
+	pwdMap   map[string]string
+	tokenMap map[string]Token
+}
 
-	pwdLock sync.Mutex
-	pwdMap  map[string]string
-
-	tokenLock sync.Mutex
-	tokenMap  map[string]Token
+func NewLocalLedger() *LocalUserLedger {
+	return &LocalUserLedger{
+		userSet:  make(map[string]User),
+		userID:   make(map[string]string),
+		pwdMap:   make(map[string]string),
+		tokenMap: make(map[string]Token),
+	}
 }
 
 // Not threadsafe
-func (lul LocalUserLedger) Add(u User, pwd string) error {
+func (lul *LocalUserLedger) Add(u User, pwd string) error {
+	log.Printf("REGISTRATION: Adding user %s with pwd %s", u.Name, pwd)
 	lul.userSet[u.UID] = u
+	lul.userID[u.Name] = u.UID
 	lul.pwdMap[u.UID] = pwd
 
 	return nil
 }
 
 // Not threadsafe
-func (lul LocalUserLedger) LogIn(uname string, pwd string) (error, string) {
+func (lul *LocalUserLedger) LogIn(uname string, pwd string) (error, string) {
+	log.Printf("LOGIN: Attempting user %s with pwd %s", uname, pwd)
+
 	id, ok := lul.userID[uname]
 	if !ok {
 		return errors.New("No record of " + uname + " exists"), ""
@@ -55,7 +63,7 @@ func (lul LocalUserLedger) LogIn(uname string, pwd string) (error, string) {
 	return nil, lul.upsertToken(id)
 }
 
-func (lul LocalUserLedger) upsertToken(id string) string {
+func (lul *LocalUserLedger) upsertToken(id string) string {
 	bitString := make([]byte, 256)
 	_, err := rand.Read(bitString)
 	if err != nil {
@@ -69,7 +77,7 @@ func (lul LocalUserLedger) upsertToken(id string) string {
 	return token
 }
 
-func (lul LocalUserLedger) Authorize(uname string, token string) (error, string) {
+func (lul *LocalUserLedger) Authorize(uname string, token string) (error, string) {
 	id, ok := lul.userID[uname]
 	if !ok {
 		return errors.New("No record of " + uname + " exists"), ""

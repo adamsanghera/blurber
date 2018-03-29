@@ -37,7 +37,7 @@
   color: rgb(157, 27, 27);
 }
 
-.blurbs {
+/* .blurbs {
   border: 1.5px black solid;
   margin: 2.5%;
   padding: 2.5%;
@@ -52,16 +52,23 @@
 .blurb-container {
   padding: 2.5%;
   border: 1px solid olivedrab;
-  /* margin: 2.5; */
+  margin: 2.5;
 }
 
 .blurb-header {
   text-align: center;
   font-size: 80%;
+  font-family: Garamond; 
+}
+
+.blurb-footer {
+  text-align: left;
+  font-size: 60%;
   font-family: Garamond;
+  color: darkgray;
 }
 
 .blurb-content {
   font-size: 90%;
   font-family: Garamond;
-}
+} */

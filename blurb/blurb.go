@@ -1,12 +1,10 @@
-package main
-
-import "time"
+package blurb
 
 type Blurb struct {
-	Content    string
-	Timestamp  time.Time
-	BID        string // immutable
-	CreatorUID string
+	Content     string
+	Timestamp   string
+	BID         string // immutable
+	CreatorName string
 }
 
 type BlurbLedger interface {
