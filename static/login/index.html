@@ -1,0 +1,51 @@
+<!DOCTYPE html> 
+
+<html>
+  <head>
+      <link rel="stylesheet" type="text/css" href="index.css">
+  </head>
+  
+  <body>
+    <h1>
+      Welcome to Blurber
+    </h1>
+    <h2>
+      Login Page
+    </h2>
+    <div class="login-reg-box">
+      <form action='/login' method='post' class="login-box">
+        <div class='login-title'>
+          Login
+        </div>
+        <label>Username:</label>
+        <input type='text' class='login-field' id='login-user'> </input>
+        <br>
+        <label>Password:</label>
+        <input type='password' class='login-field' id='login-pass'> </input>
+        <br>
+        <button class='login-submit'>
+          submit
+        </button>
+      </form>
+      <form action='/register' method='post' class="login-box">
+        <div class='login-title'>
+          Register
+        </div>
+        <label>Username:</label>
+        <input type='text' class='login-field' id='reg-user'> </input>
+        <br>
+        <label>Password:</label>
+        <input type='password' class='login-field' id='reg-pass'> </input>
+        <br>
+        <button class='reg-submit'>
+          submit
+        </button>
+      </form>
+    </div>
+  
+  </body>
+  
+  <footer>
+    Blurber (c)
+  </footer>
+</html>
