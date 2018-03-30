@@ -69,6 +69,8 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 func FeedHandler(w http.ResponseWriter, r *http.Request) {
 	log.Printf("FEED: URL is <%s>", r.URL.Path)
+
+	// First, we have to make sure that the user is allowed to be here
 	tok, err := r.Cookie("token")
 	if err != nil || tok.Value == "" {
 		log.Printf("Redirecting to log in, tok {%s} ", tok)
@@ -81,13 +83,12 @@ func FeedHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Printf("SERVER: Feed for %s with token %5s \n", usr.Value, tok.Value)
+	// Validate and renew our cookies
 	err, token := userDB.Authorize(usr.Value, tok.Value)
 	if err != nil {
 		http.Redirect(w, r, "/login/", http.StatusFound)
 		return
 	}
-
 	http.SetCookie(w, &http.Cookie{
 		Name:    "token",
 		Value:   token,
@@ -95,13 +96,14 @@ func FeedHandler(w http.ResponseWriter, r *http.Request) {
 		Path:    "/",
 	})
 
+	// Start reading our template in
 	t, err := template.ParseFiles("./static-assets/feed/index.html", "./static-assets/feed/index.css")
 	if err != nil {
 		panic(err)
 	}
 
+	// Obtain our blurb list
 	bs := make([]blurb.Blurb, 3)
-
 	bs[0] = blurb.Blurb{
 		CreatorName: "Adam",
 		Content:     "hi",
@@ -118,8 +120,8 @@ func FeedHandler(w http.ResponseWriter, r *http.Request) {
 		Timestamp:   time.Now().Format("Jan 2 – 15:04 EDT"),
 	}
 
+	// Squeeze our blurbs into the template, execute
 	t.Execute(w, bs)
-	// http.FileServer(http.Dir("./static-assets")).ServeHTTP(w, r)
 }
 
 func main() {
