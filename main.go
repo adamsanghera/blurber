@@ -18,7 +18,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	log.Printf("SERVER: URL is <%s>", r.URL.Path)
 	if r.Method == "GET" {
 		log.Printf("SERVER: Login – GET")
-		http.FileServer(http.Dir("./static")).ServeHTTP(w, r)
+		http.FileServer(http.Dir("./static-assets")).ServeHTTP(w, r)
 	} else {
 		err := r.ParseForm()
 		if err != nil {
@@ -95,7 +95,7 @@ func FeedHandler(w http.ResponseWriter, r *http.Request) {
 		Path:    "/",
 	})
 
-	t, err := template.ParseFiles("./static/feed/index.html", "./static/feed/index.css")
+	t, err := template.ParseFiles("./static-assets/feed/index.html", "./static-assets/feed/index.css")
 	if err != nil {
 		panic(err)
 	}
@@ -119,7 +119,7 @@ func FeedHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	t.Execute(w, bs)
-	// http.FileServer(http.Dir("./static")).ServeHTTP(w, r)
+	// http.FileServer(http.Dir("./static-assets")).ServeHTTP(w, r)
 }
 
 func main() {
