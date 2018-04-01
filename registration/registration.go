@@ -57,7 +57,7 @@ func (lul *LocalUserLedger) LogIn(uname string, pwd string) (error, string) {
 	}
 
 	if lul.pwdMap[id] != pwd {
-		return errors.New("Badd password for " + uname), ""
+		return errors.New("Bad password for " + uname), ""
 	}
 
 	return nil, lul.upsertToken(id)

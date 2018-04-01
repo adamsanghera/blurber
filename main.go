@@ -60,6 +60,9 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 				w.Write([]byte("Bad registration\n"))
 			} else {
 				w.Write([]byte("Good registration\n"))
+
+				// Should redirect new user to their feed too? 
+
 			}
 		} else {
 			w.Write([]byte("Something went wrong\n"))
@@ -97,7 +100,7 @@ func FeedHandler(w http.ResponseWriter, r *http.Request) {
 	})
 
 	// Start reading our template in
-	t, err := template.ParseFiles("./static-assets/feed/index.html", "./static-assets/feed/index.css")
+	t, err := template.ParseFiles("./static-assets/feed/index.html")
 	if err != nil {
 		panic(err)
 	}
@@ -127,6 +130,9 @@ func FeedHandler(w http.ResponseWriter, r *http.Request) {
 func main() {
 	log.Printf("SERVER: Starting...")
 	increasingCounter = 0
+
+	// Dev only - for quick loging
+	userDB.Add(reg.User{"dev", "-1"}, "root")
 
 	http.HandleFunc("/login/", LoginHandler)
 	http.HandleFunc("/feed/", FeedHandler)
