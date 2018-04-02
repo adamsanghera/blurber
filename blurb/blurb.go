@@ -24,13 +24,11 @@ func NewLocalLedger() *LocalBlurbLedger {
 }
 
 func (lbl LocalBlurbLedger) AddBlurb(creator string, b Blurb) {
-	log.Printf("Adding %v %v...", creator, b)
-	if _, exists := lbl.ledger[creator][b.BID]; !exists {
+	if _, exists := lbl.ledger[creator]; !exists {
 		lbl.ledger[creator] = make(map[string]Blurb)
-		log.Printf("%v", lbl.ledger)
 	}
 	lbl.ledger[creator][b.BID] = b
-	log.Printf("%v", lbl.ledger)
+	log.Printf("Updated lbl: %v", lbl.ledger)
 }
 
 func (lbl LocalBlurbLedger) RemoveBlurb(creator string, BID string) {

@@ -12,8 +12,10 @@ import (
 )
 
 var userDB = reg.NewLocalLedger()
-var lbl = blurb.NewLocalLedger()
 var increasingCounter int
+
+var lbl = blurb.NewLocalLedger()
+var bidCounter int
 
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	log.Printf("SERVER: URL is <%s>", r.URL.Path)
@@ -63,6 +65,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 				w.Write([]byte("Good registration\n"))
 
 				// Should redirect new user to their feed too? 
+				// Also increment increasingCounter
 
 			}
 		} else {
@@ -156,12 +159,14 @@ func BlurbHandler(w http.ResponseWriter, r *http.Request) {
 			newBlurb := blurb.Blurb{
 				Content: content,
 				Timestamp: time.Now().Format("Jan 2 – 15:04 EDT"),
-				BID: strconv.Itoa(increasingCounter),
+				BID: strconv.Itoa(bidCounter),
 				CreatorName: usr.Value,		
 			}
+			bidCounter += 1
+
 			lbl.AddBlurb(usrID, newBlurb)
 
-			log.Printf("BLURB: User %v (id %d) - New blurb added: %v", usr.Value, usrID, content)
+			log.Printf("BLURB: User %v (id %v) - New blurb added: %v", usr.Value, usrID, content)
 
 			http.Redirect(w, r, "/feed/", http.StatusFound)
 		} else {
