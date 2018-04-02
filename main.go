@@ -12,6 +12,7 @@ import (
 )
 
 var userDB = reg.NewLocalLedger()
+var lbl = blurb.NewLocalLedger()
 var increasingCounter int
 
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
@@ -123,8 +124,50 @@ func FeedHandler(w http.ResponseWriter, r *http.Request) {
 		Timestamp:   time.Now().Format("Jan 2 – 15:04 EDT"),
 	}
 
+	err, usrID := userDB.GetUsrID(usr.Value)
+	bs = lbl.GetUsrBlurb(usrID)
+
 	// Squeeze our blurbs into the template, execute
 	t.Execute(w, bs)
+}
+
+func BlurbHandler(w http.ResponseWriter, r *http.Request) {
+	log.Printf("BLURB: URL is <%s>", r.URL.Path)
+	if r.Method == "GET" {
+		log.Printf("BLURB: GET")
+		http.FileServer(http.Dir("./static-assets")).ServeHTTP(w, r)
+	} else {
+		err := r.ParseForm()
+		if err != nil {
+			panic(err)
+		}
+		if r.URL.Path == "/blurb/add" {
+			// Get uid 
+			usr, err := r.Cookie("uname")
+			if err != nil || usr.Value == "" {
+				http.Redirect(w, r, "/login/", http.StatusFound)
+				return
+			}
+
+			err, usrID := userDB.GetUsrID(usr.Value)
+			
+			// Add blurb
+			content := r.Form.Get("burb-text")
+			newBlurb := blurb.Blurb{
+				Content: content,
+				Timestamp: time.Now().Format("Jan 2 – 15:04 EDT"),
+				BID: strconv.Itoa(increasingCounter),
+				CreatorName: usr.Value,		
+			}
+			lbl.AddBlurb(usrID, newBlurb)
+
+			log.Printf("BLURB: User %v (id %d) - New blurb added: %v", usr.Value, usrID, content)
+
+			http.Redirect(w, r, "/feed/", http.StatusFound)
+		} else {
+			w.Write([]byte("Something went wrong\n"))
+		}
+	}
 }
 
 func main() {
@@ -136,6 +179,7 @@ func main() {
 
 	http.HandleFunc("/login/", LoginHandler)
 	http.HandleFunc("/feed/", FeedHandler)
+	http.HandleFunc("/blurb/", BlurbHandler)
 
 	http.ListenAndServe(":4000", nil)
 }
