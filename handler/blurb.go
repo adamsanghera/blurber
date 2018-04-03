@@ -42,12 +42,12 @@ func Blurb(w http.ResponseWriter, r *http.Request) {
 
 			// Create blurb
 			// TODO: Validate content to be non-empty
-			content := r.Form.Get("burb-text")
+			content := r.Form.Get("blurb-write-text")
 			lbl.AddNewBlurb(usrID, content, username)
 
 			log.Printf("BLURB: User %v (id %v) - New blurb added: %v", username, usrID, content)
 
-			http.Redirect(w, r, "/feed/", http.StatusFound)
+			http.Redirect(w, r, "/profile/", http.StatusFound)
 		} else {
 			w.Write([]byte("Something went wrong\n"))
 		}
