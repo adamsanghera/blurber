@@ -33,13 +33,15 @@ func Profile(w http.ResponseWriter, req *http.Request) {
 		Name     string
 		Bio      string
 		Username string
-		blurbs   []blurb.Blurb
+		Blurbs   []blurb.Blurb
 	}{
 		"<No name yet>",
 		"<No bio yet>",
 		username,
 		lbl.GetUsrBlurb(uid),
 	}
+
+	log.Printf("PROFILE: User has written %d blurbs", len(lbl.GetUsrBlurb(uid)))
 
 	t.Execute(w, data)
 }
