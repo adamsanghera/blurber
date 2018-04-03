@@ -9,7 +9,7 @@ import (
 )
 
 type UserLedger interface {
-	Add(u User, pwd string) error
+	Add(u user, pwd string) error
 	Remove(uname string, pwd string) error
 	LogIn(uname string, pwd string) (error, string) // returns a token
 	LogOut(uname string, pwd string) error
@@ -22,7 +22,7 @@ type Token struct {
 }
 
 type LocalUserLedger struct {
-	userSet  map[int]User
+	userSet  map[int]user
 	userID   map[string]int
 	pwdMap   map[int]string
 	tokenMap map[int]Token
@@ -32,7 +32,7 @@ type LocalUserLedger struct {
 
 func NewLocalLedger() *LocalUserLedger {
 	return &LocalUserLedger{
-		userSet:    make(map[int]User),
+		userSet:    make(map[int]user),
 		userID:     make(map[string]int),
 		pwdMap:     make(map[int]string),
 		tokenMap:   make(map[int]Token),
@@ -43,7 +43,7 @@ func NewLocalLedger() *LocalUserLedger {
 // Not threadsafe
 func (lul *LocalUserLedger) AddNewUser(name string, pwd string) error {
 	log.Printf("REGISTRATION: Adding user %s with pwd %s", name, pwd)
-	lul.userSet[lul.uidCounter] = User{
+	lul.userSet[lul.uidCounter] = user{
 		Name: name,
 		UID:  lul.uidCounter,
 	}

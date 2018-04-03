@@ -1,6 +1,6 @@
 package registration
 
-type User struct {
+type user struct {
 	Name string // can change
 	UID  int    // immutable
 }
