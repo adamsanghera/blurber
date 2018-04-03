@@ -46,16 +46,32 @@
         text-decoration: none;
       }
 
-      .blurbs {
+      .profile {
         border: 1.5px black solid;
         margin: 2.5%;
         padding: 2.5%;
       }
 
-      .blurbs-title {
+      .profile-title {
         font-family: Arial, Helvetica, sans-serif;
         text-align: center;
         padding: 2.5%;
+      }
+
+      .profile-blurbs-title {
+        text-align: center;
+        font-family: Helvetica;
+      }
+
+      .profile-about {
+        font-family: Garamond;
+        border: green 1px solid;
+        box-shadow: 0px 0px 10px rosybrown;
+        padding: 2.5%;
+      }
+
+      .profile-about-name {
+        text-align: center;
       }
 
       .blurb-container {
@@ -100,44 +116,46 @@
         <div action='/feed' class="menu-button">
           Feed
         </div>
-        <div class="menu-button">
-          <form action="/subscribe" method='post' class='subscribe-box'>
-            <button type="submit">Subscribe</button>
-            <input type="text" name="subscribe-leader" required="required">
-          </form>
+        <div action='/lookup/user' class="menu-button">
+          Subscribe
         </div>
       </div>
     </div>
 
-    <div class="blurbs">
-      <div class="blurbs-title">
-        Blurbs
+    <div class="profile">
+      <div class="profile-title">
+        Profile of {{.username}}
       </div>
-      <div class="menu">
-        <div class="menu-button">
-          <a href="/blurb">Make</a>
+      <div class="profile-about">
+        <div class="profile-about-name">
+          {{.name}}
         </div>
-        <div action='/feed/unread' class="menu-button">
-          Unread
-        </div>
-        <div action='/feed/all' class="menu-button">
-          All
-        </div>
-      </div>
-      {{range .}}
-      <div class="blurb-container">
-        <div class="blurb-header">
-          <div class="blurb-header-username"> {{.creatorName}} </div>
-        </div>
-        <div class="blurb-content">
-          {{.content}}
-        </div>
-        <div class="blurb-footer">
-          <div class="blurb-footer-timestamp"> {{.timestamp}} </div>
+        <br>
+        <div class="profile-about-bio">
+          {{.bio}}
         </div>
       </div>
       <br>
-      {{end}}
+      <div class="profile-blurbs-title">
+        Blurbs
+      </div>
+      <br>
+      <div class="profile-blurbs">
+        {{range .}}
+        <div class="blurb-container">
+          <div class="blurb-header">
+            <div class="blurb-header-username"> {{.CreatorName}} </div>
+          </div>
+          <div class="blurb-content">
+            {{.Content}}
+          </div>
+          <div class="blurb-footer">
+            <div class="blurb-footer-timestamp"> {{.Timestamp}} </div>
+          </div>
+        </div>
+        <br>
+        {{end}}
+      </div>
     </div>
   </body>
   
