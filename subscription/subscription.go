@@ -4,46 +4,57 @@ import (
 	"log"
 )
 
-type SubscriptionLedger interface {
+// Ledger is the interface for a service that maintains a
+// record of follower-leader relationships in a social graph.
+type Ledger interface {
 	AddSub(followerID int, leadearID int)
 	RemoveSub(followerID int, leadearID int)
 }
 
-type LocalSubscriptionLedger struct {
+// LocalLedger implements the Ledger interface,
+// by maintaining an in-memory record of follower-leader relationships.
+type LocalLedger struct {
 	// Map from UID-> map[UID] -> nonce
 	ledger map[int]map[int]bool
 }
 
-func NewLocalLedger() *LocalSubscriptionLedger {
-	return &LocalSubscriptionLedger{
+// NewLocalLedger creates a new LocalLedger, instantiating its
+// in-memory data structures.
+func NewLocalLedger() *LocalLedger {
+	log.Printf("SUB-LEDGER: Initializing")
+	return &LocalLedger{
 		ledger: make(map[int]map[int]bool),
 	}
 }
 
-func (lsl *LocalSubscriptionLedger) AddSub(followerID int, leadearID int) {
-	if _, exists := lsl.ledger[followerID]; !exists {
-		lsl.ledger[followerID] = make(map[int]bool)
+// AddSub adds the subscription (followerID -> leaderID) to the ledger
+func (ll *LocalLedger) AddSub(followerID int, leaderID int) {
+	log.Printf("SUB-LEDGER: Add sub (%d->%d)", followerID, leaderID)
+	if _, exists := ll.ledger[followerID]; !exists {
+		ll.ledger[followerID] = make(map[int]bool)
 	}
-	//
-	lsl.ledger[followerID][leadearID] = true
-	log.Printf("Updated lsl: %v", lsl.ledger)
+
+	ll.ledger[followerID][leaderID] = true
 }
 
-func (lsl *LocalSubscriptionLedger) RemoveSub(followerID int, leadearID int) {
-	if _, exists := lsl.ledger[followerID]; !exists {
+// RemoveSub removes the subscription (followerID -> leaderID) from the ledger
+func (ll *LocalLedger) RemoveSub(followerID int, leaderID int) {
+	log.Printf("SUB-LEDGER: Remove sub (%d->%d)", followerID, leaderID)
+	if _, exists := ll.ledger[followerID]; !exists {
 		return
 	}
-	delete(lsl.ledger[followerID], leadearID)
+	delete(ll.ledger[followerID], leaderID)
 }
 
-func (lsl *LocalSubscriptionLedger) RemoveUsr(uid int) {
-	log.Printf("SUBSCRIPTION: Removing %s and all their followers", uid)
+// RemoveUser removes all subscriptions (X -> uid) and (uid -> X) from the ledger
+func (ll *LocalLedger) RemoveUser(uid int) {
+	log.Printf("SUB-LEDGER: Remove %d from all records", uid)
 
 	// Unsubscribe this person from every follower in the ledger
-	for followID := range lsl.ledger {
-		lsl.RemoveSub(followID, uid)
+	for followID := range ll.ledger {
+		ll.RemoveSub(followID, uid)
 	}
 
 	// Remove his own subscription list
-	delete(lsl.ledger, uid)
+	delete(ll.ledger, uid)
 }

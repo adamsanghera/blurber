@@ -25,15 +25,15 @@ func Profile(w http.ResponseWriter, req *http.Request) {
 	}
 
 	// Get the UID, so that we can retrieve this user's blurb
-	err, uid := userDB.GetUsrID(username)
+	uid, err := userDB.GetUserID(username)
 	if err != nil {
 		w.Write([]byte("Something went wrong while retrieving user blurbs"))
 	}
 
-	blurbs := lbl.GetUsrBlurb(uid)
+	blurbs := lbl.GetBlurbsCreatedBy(uid)
 
 	sort.Slice(blurbs, func(i, j int) bool {
-		return blurbs[i].Time.Before(blurbs[j].Time)
+		return blurbs[i].Time.After(blurbs[j].Time)
 	})
 
 	data := struct {
@@ -45,10 +45,10 @@ func Profile(w http.ResponseWriter, req *http.Request) {
 		"<No name yet>",
 		"<No bio yet>",
 		username,
-		lbl.GetUsrBlurb(uid),
+		blurbs,
 	}
 
-	log.Printf("PROFILE: User has written %d blurbs", len(lbl.GetUsrBlurb(uid)))
+	log.Printf("PROFILE: User has written %d blurbs", len(blurbs))
 
 	t.Execute(w, data)
 }

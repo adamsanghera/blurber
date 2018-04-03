@@ -23,7 +23,7 @@ func validateSession(w http.ResponseWriter, r *http.Request) (bool, string) {
 	}
 
 	// Make sure that the token matches the username
-	err, token := userDB.CheckIn(cookieUsername.Value, cookieToken.Value)
+	token, err := userDB.CheckIn(cookieUsername.Value, cookieToken.Value)
 	if err != nil {
 		http.Redirect(w, r, "/login/", http.StatusFound)
 		return false, ""

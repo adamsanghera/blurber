@@ -18,7 +18,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		}
 		if r.URL.Path == "/login/existing" {
 			log.Printf("LOGIN HANDLER: Login – Attempted login")
-			err, token := userDB.LogIn(r.Form.Get("login-user"), r.Form.Get("login-pass"))
+			token, err := userDB.LogIn(r.Form.Get("login-user"), r.Form.Get("login-pass"))
 			if err != nil {
 				log.Printf("LOGIN HANDLER: Login – login error {%s}", err.Error())
 				w.Write([]byte("Bad password\n"))
