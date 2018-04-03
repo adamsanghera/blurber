@@ -22,27 +22,35 @@ type Token struct {
 }
 
 type LocalUserLedger struct {
-	userSet  map[string]User
-	userID   map[string]string
-	pwdMap   map[string]string
-	tokenMap map[string]Token
+	userSet  map[int]User
+	userID   map[string]int
+	pwdMap   map[int]string
+	tokenMap map[int]Token
+
+	uidCounter int
 }
 
 func NewLocalLedger() *LocalUserLedger {
 	return &LocalUserLedger{
-		userSet:  make(map[string]User),
-		userID:   make(map[string]string),
-		pwdMap:   make(map[string]string),
-		tokenMap: make(map[string]Token),
+		userSet:    make(map[int]User),
+		userID:     make(map[string]int),
+		pwdMap:     make(map[int]string),
+		tokenMap:   make(map[int]Token),
+		uidCounter: 0,
 	}
 }
 
 // Not threadsafe
-func (lul *LocalUserLedger) Add(u User, pwd string) error {
-	log.Printf("REGISTRATION: Adding user %s with pwd %s", u.Name, pwd)
-	lul.userSet[u.UID] = u
-	lul.userID[u.Name] = u.UID
-	lul.pwdMap[u.UID] = pwd
+func (lul *LocalUserLedger) AddNewUser(name string, pwd string) error {
+	log.Printf("REGISTRATION: Adding user %s with pwd %s", name, pwd)
+	lul.userSet[lul.uidCounter] = User{
+		Name: name,
+		UID:  lul.uidCounter,
+	}
+	lul.userID[name] = lul.uidCounter
+	lul.pwdMap[lul.uidCounter] = pwd
+
+	lul.uidCounter++
 
 	return nil
 }
@@ -63,7 +71,7 @@ func (lul *LocalUserLedger) LogIn(uname string, pwd string) (error, string) {
 	return nil, lul.allocateNewToken(id)
 }
 
-func (lul *LocalUserLedger) allocateNewToken(id string) string {
+func (lul *LocalUserLedger) allocateNewToken(id int) string {
 	bitString := make([]byte, 256)
 	_, err := rand.Read(bitString)
 	if err != nil {
@@ -94,12 +102,12 @@ func (lul *LocalUserLedger) CheckIn(uname string, token string) (error, string) 
 	return nil, lul.allocateNewToken(id)
 }
 
-func (lul *LocalUserLedger) GetUsrID(uname string) (error, string) {
+func (lul *LocalUserLedger) GetUsrID(uname string) (error, int) {
 	log.Printf("LOGIN: Getting user %s", uname)
 
 	id, ok := lul.userID[uname]
 	if !ok {
-		return errors.New("No record of " + uname + " exists"), ""
+		return errors.New("No record of " + uname + " exists"), -1
 	}
 	return nil, id
 }

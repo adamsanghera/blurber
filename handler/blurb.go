@@ -41,6 +41,7 @@ func Blurb(w http.ResponseWriter, r *http.Request) {
 			}
 
 			// Create blurb
+			// TODO: Validate content to be non-empty
 			content := r.Form.Get("burb-text")
 			lbl.AddNewBlurb(usrID, content, username)
 

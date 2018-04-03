@@ -3,10 +3,7 @@ package handler
 import (
 	"log"
 	"net/http"
-	"strconv"
 	"time"
-
-	reg "../registration"
 )
 
 func Login(w http.ResponseWriter, r *http.Request) {
@@ -45,10 +42,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 			}
 		} else if r.URL.Path == "/login/new" {
 			log.Printf("SERVER: Register – New attempt with {%s, %s}", r.Form["reg-user"], r.Form["reg-pass"])
-			err := userDB.Add(reg.User{
-				UID:  strconv.Itoa(increasingCounter),
-				Name: r.Form.Get("reg-user"),
-			}, r.Form.Get("reg-pass"))
+			err := userDB.AddNewUser(r.Form.Get("reg-user"), r.Form.Get("reg-pass"))
 
 			if err != nil {
 				log.Printf("SERVER: Register – failed {%s}", err.Error())

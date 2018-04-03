@@ -20,21 +20,21 @@ type BlurbLedger interface {
 type LocalBlurbLedger struct {
 	// Map from UID -> map [BID] -> Blurb
 	bidCounter int
-	ledger     map[string]map[int]blurb
+	ledger     map[int]map[int]blurb
 }
 
 func NewLocalLedger() *LocalBlurbLedger {
 	return &LocalBlurbLedger{
-		ledger:     make(map[string]map[int]blurb),
+		ledger:     make(map[int]map[int]blurb),
 		bidCounter: 0,
 	}
 }
 
-func (lbl LocalBlurbLedger) AddNewBlurb(creator string, content string, creatorName string) {
-	if _, exists := lbl.ledger[creator]; !exists {
-		lbl.ledger[creator] = make(map[int]blurb)
+func (lbl LocalBlurbLedger) AddNewBlurb(creatorID int, content string, creatorName string) {
+	if _, exists := lbl.ledger[creatorID]; !exists {
+		lbl.ledger[creatorID] = make(map[int]blurb)
 	}
-	lbl.ledger[creator][lbl.bidCounter] = blurb{
+	lbl.ledger[creatorID][lbl.bidCounter] = blurb{
 		content:     content,
 		timestamp:   time.Now().Format("Jan 2 – 15:04 EDT"),
 		bid:         lbl.bidCounter,
@@ -44,13 +44,13 @@ func (lbl LocalBlurbLedger) AddNewBlurb(creator string, content string, creatorN
 	log.Printf("Updated lbl: %v", lbl.ledger)
 }
 
-func (lbl LocalBlurbLedger) RemoveBlurb(creator string, bid int) {
-	delete(lbl.ledger[creator], bid)
+func (lbl LocalBlurbLedger) RemoveBlurb(creatorID int, bid int) {
+	delete(lbl.ledger[creatorID], bid)
 }
 
-func (lbl LocalBlurbLedger) GetUsrBlurb(creator string) []blurb {
+func (lbl LocalBlurbLedger) GetUsrBlurb(creatorID int) []blurb {
 	bs := make([]blurb, 0)
-	for _, v := range lbl.ledger[creator] {
+	for _, v := range lbl.ledger[creatorID] {
 		bs = append(bs, v)
 	}
 	return bs
