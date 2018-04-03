@@ -2,6 +2,7 @@ package handler
 
 import (
 	"html/template"
+	"log"
 	"net/http"
 
 	"../blurb"
@@ -9,13 +10,15 @@ import (
 
 // Profile is the handler for /profile/ requests
 func Profile(w http.ResponseWriter, req *http.Request) {
+	log.Printf("PROFILE: Validating request")
 	isValid, username := validateSession(w, req)
 	if !isValid {
 		return
 	}
 
+	log.Printf("PROFILE: Request validated for %s", username)
 	// Build templates
-	t, err := template.ParseFiles("./static-assets/feed/profile.html")
+	t, err := template.ParseFiles("./static-assets/profile/index.html")
 	if err != nil {
 		panic(err)
 	}
@@ -27,14 +30,14 @@ func Profile(w http.ResponseWriter, req *http.Request) {
 	}
 
 	data := struct {
-		name     string
-		bio      string
-		username string
+		Name     string
+		Bio      string
+		Username string
 		blurbs   []blurb.Blurb
 	}{
-		username,
 		"<No name yet>",
 		"<No bio yet>",
+		username,
 		lbl.GetUsrBlurb(uid),
 	}
 
