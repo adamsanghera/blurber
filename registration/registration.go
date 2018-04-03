@@ -57,7 +57,7 @@ func (lul *LocalUserLedger) AddNewUser(name string, pwd string) error {
 
 // Not threadsafe
 func (lul *LocalUserLedger) LogIn(uname string, pwd string) (error, string) {
-	log.Printf("LOGIN: Attempting user %s with pwd %s", uname, pwd)
+	log.Printf("REGISTRATION: Attempting user %s with pwd %s", uname, pwd)
 
 	id, ok := lul.userID[uname]
 	if !ok {
@@ -103,11 +103,24 @@ func (lul *LocalUserLedger) CheckIn(uname string, token string) (error, string) 
 }
 
 func (lul *LocalUserLedger) GetUsrID(uname string) (error, int) {
-	log.Printf("LOGIN: Getting user %s", uname)
+	log.Printf("REGISTRATION: Getting user %s", uname)
 
 	id, ok := lul.userID[uname]
 	if !ok {
 		return errors.New("No record of " + uname + " exists"), -1
 	}
 	return nil, id
+}
+
+func (lul *LocalUserLedger) Remove(uname string) bool {
+	log.Printf("REGISTRATION: Removing user %s", uname)
+
+	id, ok := lul.userID[uname]
+	if !ok { return false }
+
+	delete(lul.userID, uname)
+	delete(lul.userSet, id)
+	delete(lul.pwdMap, id)
+	delete(lul.tokenMap, id)
+	return true
 }

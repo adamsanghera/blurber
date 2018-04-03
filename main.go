@@ -16,5 +16,7 @@ func main() {
 	http.HandleFunc("/subscribe", handler.Subscribe)
 	http.HandleFunc("/profile/", handler.Profile)
 
+	http.HandleFunc("/removeAcc/", handler.RemoveAcc)
+
 	http.ListenAndServe(":4000", nil)
 }

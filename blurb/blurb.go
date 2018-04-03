@@ -61,3 +61,10 @@ func (lbl *LocalBlurbLedger) GetUsrBlurb(creatorID int) []Blurb {
 	}
 	return bs
 }
+
+func (lbl *LocalBlurbLedger) RemoveAllBlurb(creatorID int) {
+    log.Printf("BLURB: Removing all blurbs by %s", creatorID)
+    for k := range lbl.ledger[creatorID] {
+        lbl.RemoveBlurb(creatorID, k)
+    }
+}

@@ -12,5 +12,5 @@
 
 ## How to run
 
-1. `go run main.go` 
+1. `go run main.go` or `DEBUG=1 go run main.go`
 1. `http://localhost:4000/login/`

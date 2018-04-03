@@ -31,7 +31,7 @@ func Subscribe(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    subDB.AddSub(usernam, leaderField)
+    subDB.AddSub(uID, lID)
     
     http.Redirect(w, r, "/feed/", http.StatusFound)
 } 

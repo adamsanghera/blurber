@@ -5,32 +5,46 @@ import (
 )
 
 type SubscriptionLedger interface {
-	AddSub(follower string, leader string)
-	RemoveSub(follower string, leader string)
+	AddSub(followerID int, leadearID int)
+	RemoveSub(followerID int, leadearID int)
 }
 
 type LocalSubscriptionLedger struct {
 	// Map from UID-> map[UID] -> nonce
-	ledger map[string]map[string]bool
+	ledger map[int]map[int]bool
 }
 
 func NewLocalLedger() *LocalSubscriptionLedger {
 	return &LocalSubscriptionLedger{
-		ledger: make(map[string]map[string]bool),
+		ledger: make(map[int]map[int]bool),
 	}
 }
 
-func (lsl LocalSubscriptionLedger) AddSub(follower string, leader string) {
-	if _, exists := lsl.ledger[follower]; !exists {
-		lsl.ledger[follower] = make(map[string]bool)
+func (lsl *LocalSubscriptionLedger) AddSub(followerID int, leadearID int) {
+	if _, exists := lsl.ledger[followerID]; !exists {
+		lsl.ledger[followerID] = make(map[int]bool)
 	}
-	lsl.ledger[follower][leader] = true
+	// 
+	lsl.ledger[followerID][leadearID] = true
 	log.Printf("Updated lsl: %v", lsl.ledger)
 }
 
-func (lsl LocalSubscriptionLedger) RemoveSub(follower string, leader string) {
-	if _, exists := lsl.ledger[follower]; !exists {
+func (lsl *LocalSubscriptionLedger) RemoveSub(followerID int, leadearID int) {
+	if _, exists := lsl.ledger[followerID]; !exists {
 		return
 	}
-	delete(lsl.ledger[follower], leader)
+	delete(lsl.ledger[followerID], leadearID)
 }
+
+func (lsl *LocalSubscriptionLedger) RemoveUsr(uid int) {
+	log.Printf("SUBSCRIPTION: Removing %s and all their followers", uid)
+
+	// Unsubscribe this person from every follower in the ledger
+	for followID := range lsl.ledger {
+		lsl.RemoveSub(followID, uid)
+	}
+
+	// Remove his own subscription list
+	delete(lsl.ledger, uid)
+}
+
