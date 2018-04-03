@@ -5,19 +5,26 @@ import (
 	"log"
 	"net/http"
 	"sort"
+	"time"
 
 	"../blurb"
 )
 
 // Profile is the handler for /profile/ requests
 func Profile(w http.ResponseWriter, req *http.Request) {
-	log.Printf("PROFILE: Validating request")
+	log.Printf("HANDLERS-PROFILE: Request received")
+
+	start := time.Now()
+	defer func() {
+		log.Printf("HANDLERS-PROFILE: Request serviced in %5.1f seconds", time.Since(start).Seconds())
+	}()
+
+	// Validate the sesh
 	isValid, username := validateSession(w, req)
 	if !isValid {
 		return
 	}
 
-	log.Printf("PROFILE: Request validated for %s", username)
 	// Build templates
 	t, err := template.ParseFiles("./static-assets/profile/index.html")
 	if err != nil {
@@ -27,15 +34,16 @@ func Profile(w http.ResponseWriter, req *http.Request) {
 	// Get the UID, so that we can retrieve this user's blurb
 	uid, err := userDB.GetUserID(username)
 	if err != nil {
-		w.Write([]byte("Something went wrong while retrieving user blurbs"))
+		w.Write([]byte("Something went very wrong"))
 	}
 
-	blurbs := lbl.GetBlurbsCreatedBy(uid)
-
+	// Obtain and sort blurb
+	blurbs := blurbDB.GetBlurbsCreatedBy(uid)
 	sort.Slice(blurbs, func(i, j int) bool {
 		return blurbs[i].Time.After(blurbs[j].Time)
 	})
 
+	// Create a data packet to send back
 	data := struct {
 		Name     string
 		Bio      string
@@ -47,8 +55,6 @@ func Profile(w http.ResponseWriter, req *http.Request) {
 		username,
 		blurbs,
 	}
-
-	log.Printf("PROFILE: User has written %d blurbs", len(blurbs))
 
 	t.Execute(w, data)
 }

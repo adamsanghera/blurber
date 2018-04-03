@@ -10,7 +10,7 @@ import (
 func main() {
 	log.Printf("SERVER: Starting...")
 
-	http.HandleFunc("/login/", handler.Login)
+	http.HandleFunc("/login/", handler.Auth)
 	http.HandleFunc("/feed/", handler.Feed)
 	http.HandleFunc("/blurb/", handler.Blurb)
 	http.HandleFunc("/subscribe/", handler.Subscribe)

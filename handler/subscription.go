@@ -3,16 +3,24 @@ package handler
 import (
 	"log"
 	"net/http"
+	"time"
 )
 
 func Subscribe(w http.ResponseWriter, r *http.Request) {
-	log.Printf("SUB: URL is <%s>", r.URL.Path)
+	log.Printf("HANDLERS-SUB: Request received")
 
-	validSesh, usernam := validateSession(w, r)
+	start := time.Now()
+	defer func() {
+		log.Printf("HANDLERS-SUB: Request serviced in %5.1f seconds", time.Since(start).Seconds())
+	}()
+
+	// Validate session
+	validSesh, uname := validateSession(w, r)
 	if !validSesh {
 		return
 	}
 
+	// No posts allowed
 	if r.Method != "POST" {
 		return
 	}
@@ -23,22 +31,26 @@ func Subscribe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	leaderField := r.Form.Get("subscribe-leader")
+	// Obtain all variables
+	leaderName := r.Form.Get("subscribe-leader")
+	uID, err := userDB.GetUserID(uname)
+	lID, lErr := userDB.GetUserID(leaderName)
 
-	uID, err := userDB.GetUserID(usernam)
-	lID, lErr := userDB.GetUserID(leaderField)
 	// Verify leader exists
 	if lErr != nil {
-		w.Write([]byte("The person you want to susbcribe doesn't exist :(\n"))
+		w.Write([]byte("The person you want to susbcribe to doesn't exist :(\n"))
 		return
 	}
-	// Check for subscription to self
+
+	// Cannot self-subscribe
 	if uID == lID {
 		w.Write([]byte("You can't subscribe to yourself :(\n"))
 		return
 	}
 
+	// Submit subscription request to ledger
 	subDB.AddSub(uID, lID)
 
+	// Redirect to feed
 	http.Redirect(w, r, "/feed/", http.StatusFound)
 }

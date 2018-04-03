@@ -4,10 +4,16 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"time"
 )
 
 func Blurb(w http.ResponseWriter, r *http.Request) {
-	log.Printf("BLURB: URL is <%s>", r.URL.Path)
+	log.Printf("HANDLERS-BLURB: %s request received", r.Method)
+
+	start := time.Now()
+	defer func() {
+		log.Printf("HANDLERS-BLURB: Request serviced in %5.1f seconds", time.Since(start).Seconds())
+	}()
 
 	validSesh, username := validateSession(w, r)
 	if !validSesh {
@@ -15,8 +21,6 @@ func Blurb(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Method == "GET" {
-		log.Printf("BLURB: GET")
-
 		// Build template
 		t, err := template.ParseFiles("./static-assets/blurb/index.html")
 		if err != nil {
@@ -24,8 +28,10 @@ func Blurb(w http.ResponseWriter, r *http.Request) {
 		}
 
 		t.Execute(w, nil)
+		return
+	}
 
-	} else {
+	if r.Method == "POST" {
 		// Parse the form
 		err := r.ParseForm()
 		if err != nil {
@@ -33,23 +39,22 @@ func Blurb(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if r.URL.Path == "/blurb/add" {
-			// Determine uid
+			// Retrieve uid
 			usrID, err := userDB.GetUserID(username)
 			if err != nil {
-				w.Write([]byte("Something went wrong\n"))
+				w.Write([]byte("Something went wrong\n\terr: " + err.Error()))
 				return
 			}
 
 			// Create blurb
 			// TODO: Validate content to be non-empty
 			content := r.Form.Get("blurb-write-text")
-			lbl.AddNewBlurb(usrID, content, username)
-
-			log.Printf("BLURB: User %v (id %v) - New blurb added: %v", username, usrID, content)
+			blurbDB.AddNewBlurb(usrID, content, username)
 
 			http.Redirect(w, r, "/profile/", http.StatusFound)
-		} else {
-			w.Write([]byte("Something went wrong\n"))
+			return
 		}
+
+		w.Write([]byte("Something went wrong\n"))
 	}
 }
