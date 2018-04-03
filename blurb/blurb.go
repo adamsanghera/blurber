@@ -6,10 +6,10 @@ import (
 )
 
 type Blurb struct {
-	content     string
-	timestamp   string
-	bid         int // immutable
-	creatorName string
+	Content     string
+	Timestamp   string
+	BID         int // immutable
+	CreatorName string
 }
 
 type BlurbLedger interface {
@@ -35,10 +35,10 @@ func (lbl LocalBlurbLedger) AddNewBlurb(creatorID int, content string, creatorNa
 		lbl.ledger[creatorID] = make(map[int]Blurb)
 	}
 	lbl.ledger[creatorID][lbl.bidCounter] = Blurb{
-		content:     content,
-		timestamp:   time.Now().Format("Jan 2 – 15:04 EDT"),
-		bid:         lbl.bidCounter,
-		creatorName: creatorName,
+		Content:     content,
+		Timestamp:   time.Now().Format("Jan 2 – 15:04 EDT"),
+		BID:         lbl.bidCounter,
+		CreatorName: creatorName,
 	}
 	lbl.bidCounter++
 	log.Printf("Updated lbl: %v", lbl.ledger)
