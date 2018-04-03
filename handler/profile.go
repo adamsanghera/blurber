@@ -33,7 +33,7 @@ func Profile(w http.ResponseWriter, req *http.Request) {
 	blurbs := lbl.GetBlurbsCreatedBy(uid)
 
 	sort.Slice(blurbs, func(i, j int) bool {
-		return blurbs[i].Time.Before(blurbs[j].Time)
+		return blurbs[i].Time.After(blurbs[j].Time)
 	})
 
 	data := struct {
