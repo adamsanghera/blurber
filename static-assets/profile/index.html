@@ -106,9 +106,9 @@
       </div>
     </div>
 
-    <div class="blurbs">
-      <div class="blurbs-title">
-        Blurbs
+    <div class="profile">
+      <div class="profile-title">
+        {{.username}}
       </div>
       <div class="menu">
         <div class="menu-button">
@@ -124,13 +124,13 @@
       {{range .}}
       <div class="blurb-container">
         <div class="blurb-header">
-          <div class="blurb-header-username"> {{.creatorName}} </div>
+          <div class="blurb-header-username"> {{.CreatorName}} </div>
         </div>
         <div class="blurb-content">
-          {{.content}}
+          {{.Content}}
         </div>
         <div class="blurb-footer">
-          <div class="blurb-footer-timestamp"> {{.timestamp}} </div>
+          <div class="blurb-footer-timestamp"> {{.Timestamp}} </div>
         </div>
       </div>
       <br>
