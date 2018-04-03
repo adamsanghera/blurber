@@ -23,8 +23,8 @@ func Feed(w http.ResponseWriter, r *http.Request) {
 
 	// TODO: Implement real logic here.
 	// Obtain our blurb list
-	err, usrID := userDB.GetUsrID(uname)
-	bs := lbl.GetUsrBlurb(usrID)
+	usrID, err := userDB.GetUserID(uname)
+	bs := lbl.GetBlurbsCreatedBy(usrID)
 
 	// Squeeze our blurbs into the template, execute
 	t.Execute(w, bs)

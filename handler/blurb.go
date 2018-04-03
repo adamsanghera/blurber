@@ -34,7 +34,7 @@ func Blurb(w http.ResponseWriter, r *http.Request) {
 
 		if r.URL.Path == "/blurb/add" {
 			// Determine uid
-			err, usrID := userDB.GetUsrID(username)
+			usrID, err := userDB.GetUserID(username)
 			if err != nil {
 				w.Write([]byte("Something went wrong\n"))
 				return
