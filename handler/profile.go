@@ -4,6 +4,7 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"sort"
 
 	"../blurb"
 )
@@ -28,6 +29,12 @@ func Profile(w http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		w.Write([]byte("Something went wrong while retrieving user blurbs"))
 	}
+
+	blurbs := lbl.GetUsrBlurb(uid)
+
+	sort.Slice(blurbs, func(i, j int) bool {
+		return blurbs[i].Time.Before(blurbs[j].Time)
+	})
 
 	data := struct {
 		Name     string

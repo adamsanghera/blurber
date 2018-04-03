@@ -8,6 +8,7 @@ import (
 type Blurb struct {
 	Content     string
 	Timestamp   string
+	Time        time.Time
 	BID         int // immutable
 	CreatorName string
 }
@@ -34,9 +35,13 @@ func (lbl *LocalBlurbLedger) AddNewBlurb(creatorID int, content string, creatorN
 	if _, exists := lbl.ledger[creatorID]; !exists {
 		lbl.ledger[creatorID] = make(map[int]Blurb)
 	}
+
+	creationTime := time.Now()
+
 	lbl.ledger[creatorID][lbl.bidCounter] = Blurb{
 		Content:     content,
-		Timestamp:   time.Now().Format("Jan 2 – 15:04 EDT"),
+		Time:        creationTime,
+		Timestamp:   creationTime.Format("Jan 2 – 15:04 EDT"),
 		BID:         lbl.bidCounter,
 		CreatorName: creatorName,
 	}
