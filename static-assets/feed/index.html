@@ -100,8 +100,11 @@
         <div action='/feed' class="menu-button">
           Feed
         </div>
-        <div action='/lookup/user' class="menu-button">
-          Subscribe
+        <div class="menu-button">
+          <form action="/subscribe" method='post' class='subscribe-box'>
+            <button type="submit">Subscribe</button>
+            <input type="text" name="subscribe-leader" required="required">
+          </form>
         </div>
       </div>
     </div>

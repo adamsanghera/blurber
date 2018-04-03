@@ -2,9 +2,13 @@
 
 ## Main features
 
-- [ ] Login/ register
+- [x] Login/ register
+- [ ] Delete account
 - [ ] Write blurb
 - [ ] Subscribe to blurbers
+- [ ] Unsubscribe on feed
+- [ ] Feed: show all blurbs ('Discover') vs. just subscription
+
 
 ## How to run
 

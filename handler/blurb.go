@@ -10,27 +10,21 @@ func Blurb(w http.ResponseWriter, r *http.Request) {
 	log.Printf("BLURB: URL is <%s>", r.URL.Path)
 
 	validSesh, username := validateSession(w, r)
-	if !validSesh {
-		return
-	}
+	if !validSesh { return }
 
 	if r.Method == "GET" {
 		log.Printf("BLURB: GET")
 
 		// Build template
 		t, err := template.ParseFiles("./static-assets/blurb/index.html")
-		if err != nil {
-			panic(err)
-		}
+		if err != nil { panic(err) }
 
 		t.Execute(w, nil)
 
 	} else {
 		// Parse the form
 		err := r.ParseForm()
-		if err != nil {
-			panic(err)
-		}
+		if err != nil { panic(err) }
 
 		if r.URL.Path == "/blurb/add" {
 			// Determine uid
