@@ -36,7 +36,7 @@ type LocalLedger struct {
 
 // NewLocalLedger initializes and returns a new LocalLedger instance.
 func NewLocalLedger() *LocalLedger {
-	log.Printf("AUTH: Initializing")
+	log.Printf("AUTH-LEDGER: Initializing")
 	return &LocalLedger{
 		userSet:    make(map[int]user),
 		userID:     make(map[string]int),
@@ -52,7 +52,7 @@ func NewLocalLedger() *LocalLedger {
 //   (3) Storage of a provided password, associated with the UID.
 // The ledger's UID counter is then (TODO: thread-safely) incremented.
 func (lul *LocalLedger) AddNewUser(name string, pwd string) error {
-	log.Printf("AUTH: Registering new user %s", name)
+	log.Printf("AUTH-LEDGER: Registering new user %s", name)
 	lul.userSet[lul.uidCounter] = user{
 		Name: name,
 		UID:  lul.uidCounter,
@@ -69,7 +69,7 @@ func (lul *LocalLedger) AddNewUser(name string, pwd string) error {
 // LogIn performs a username-check, followed by a password-check.
 // If both checks pass, then a new token is allocated to associated UID, and returned.
 func (lul *LocalLedger) LogIn(uname string, pwd string) (string, error) {
-	log.Printf("AUTH: Logging-in %s", uname)
+	log.Printf("AUTH-LEDGER: Logging-in %s", uname)
 
 	// username-check
 	id, err := lul.GetUserID(uname)
@@ -103,7 +103,7 @@ func (lul *LocalLedger) allocateNewToken(uid int) string {
 // CheckIn performs a username-check and a token-check.
 // If both checks pass, then a new token is validated and returned
 func (lul *LocalLedger) CheckIn(uname string, token string) (string, error) {
-	log.Printf("AUTH: Checking-in %s", uname)
+	log.Printf("AUTH-LEDGER: Checking-in %s", uname)
 
 	// username-check
 	id, err := lul.GetUserID(uname)
@@ -126,7 +126,7 @@ func (lul *LocalLedger) CheckIn(uname string, token string) (string, error) {
 
 // GetUserID retrieves the permanent UID associated with uname.
 func (lul *LocalLedger) GetUserID(uname string) (int, error) {
-	log.Printf("AUTH: Retrieving UID for %s", uname)
+	log.Printf("AUTH-LEDGER: Retrieving UID for %s", uname)
 
 	id, ok := lul.userID[uname]
 	if !ok {
@@ -137,7 +137,7 @@ func (lul *LocalLedger) GetUserID(uname string) (int, error) {
 
 // Remove eliminates all history of uname, including its UID.
 func (lul *LocalLedger) Remove(uname string) error {
-	log.Printf("AUTH: Removing all history of %s", uname)
+	log.Printf("AUTH-LEDGER: Removing all history of %s", uname)
 
 	// username-check
 	id, err := lul.GetUserID(uname)
