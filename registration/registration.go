@@ -13,7 +13,7 @@ type UserLedger interface {
 	Remove(uname string, pwd string) error
 	LogIn(uname string, pwd string) (error, string) // returns a token
 	LogOut(uname string, pwd string) error
-	Authorize(uname string, token string) (error, string) // returns a token
+	CheckIn(uname string, token string) (error, string) // returns a token
 }
 
 type Token struct {
@@ -60,10 +60,10 @@ func (lul *LocalUserLedger) LogIn(uname string, pwd string) (error, string) {
 		return errors.New("Bad password for " + uname), ""
 	}
 
-	return nil, lul.upsertToken(id)
+	return nil, lul.allocateNewToken(id)
 }
 
-func (lul *LocalUserLedger) upsertToken(id string) string {
+func (lul *LocalUserLedger) allocateNewToken(id string) string {
 	bitString := make([]byte, 256)
 	_, err := rand.Read(bitString)
 	if err != nil {
@@ -77,7 +77,7 @@ func (lul *LocalUserLedger) upsertToken(id string) string {
 	return token
 }
 
-func (lul *LocalUserLedger) Authorize(uname string, token string) (error, string) {
+func (lul *LocalUserLedger) CheckIn(uname string, token string) (error, string) {
 	id, ok := lul.userID[uname]
 	if !ok {
 		return errors.New("No record of " + uname + " exists"), ""
@@ -91,7 +91,7 @@ func (lul *LocalUserLedger) Authorize(uname string, token string) (error, string
 		return errors.New("Session expried for " + uname), ""
 	}
 
-	return nil, lul.upsertToken(id)
+	return nil, lul.allocateNewToken(id)
 }
 
 func (lul *LocalUserLedger) GetUsrID(uname string) (error, string) {

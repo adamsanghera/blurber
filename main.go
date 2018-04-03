@@ -17,6 +17,40 @@ var increasingCounter int
 var lbl = blurb.NewLocalLedger()
 var bidCounter int
 
+func validateSession(w http.ResponseWriter, r *http.Request) (bool, string) {
+	// Check the cookie jar for a token
+	cookieToken, err := r.Cookie("token")
+	if err != nil || cookieToken.Value == "" {
+		log.Printf("Redirecting to log in, tok {%s} ", cookieToken.Value)
+		http.Redirect(w, r, "/login/", http.StatusFound)
+		return false, ""
+	}
+
+	// Check the cookie jar for a username
+	cookieUsername, err := r.Cookie("uname")
+	if err != nil || cookieUsername.Value == "" {
+		http.Redirect(w, r, "/login/", http.StatusFound)
+		return false, ""
+	}
+
+	// Make sure that the token matches the username
+	err, token := userDB.CheckIn(cookieUsername.Value, cookieToken.Value)
+	if err != nil {
+		http.Redirect(w, r, "/login/", http.StatusFound)
+		return false, ""
+	}
+
+	// Set the token to be the new value
+	http.SetCookie(w, &http.Cookie{
+		Name:    "token",
+		Value:   token,
+		Expires: time.Now().Add(365 * 24 * time.Hour),
+		Path:    "/",
+	})
+
+	return true, cookieUsername.Value
+}
+
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	log.Printf("SERVER: URL is <%s>", r.URL.Path)
 	if r.Method == "GET" {
@@ -64,7 +98,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 			} else {
 				w.Write([]byte("Good registration\n"))
 
-				// Should redirect new user to their feed too? 
+				// Should redirect new user to their feed too?
 				// Also increment increasingCounter
 
 			}
@@ -77,38 +111,19 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 func FeedHandler(w http.ResponseWriter, r *http.Request) {
 	log.Printf("FEED: URL is <%s>", r.URL.Path)
 
-	// First, we have to make sure that the user is allowed to be here
-	tok, err := r.Cookie("token")
-	if err != nil || tok.Value == "" {
-		log.Printf("Redirecting to log in, tok {%s} ", tok)
-		http.Redirect(w, r, "/login/", http.StatusFound)
-		return
-	}
-	usr, err := r.Cookie("uname")
-	if err != nil || usr.Value == "" {
-		http.Redirect(w, r, "/login/", http.StatusFound)
-		return
-	}
-
 	// Validate and renew our cookies
-	err, token := userDB.Authorize(usr.Value, tok.Value)
-	if err != nil {
-		http.Redirect(w, r, "/login/", http.StatusFound)
+	validSesh, uname := validateSession(w, r)
+	if !validSesh {
 		return
 	}
-	http.SetCookie(w, &http.Cookie{
-		Name:    "token",
-		Value:   token,
-		Expires: time.Now().Add(365 * 24 * time.Hour),
-		Path:    "/",
-	})
 
-	// Start reading our template in
+	// Build template
 	t, err := template.ParseFiles("./static-assets/feed/index.html")
 	if err != nil {
 		panic(err)
 	}
 
+	// TODO: Implement real logic here.
 	// Obtain our blurb list
 	bs := make([]blurb.Blurb, 3)
 	bs[0] = blurb.Blurb{
@@ -127,8 +142,8 @@ func FeedHandler(w http.ResponseWriter, r *http.Request) {
 		Timestamp:   time.Now().Format("Jan 2 – 15:04 EDT"),
 	}
 
-	err, usrID := userDB.GetUsrID(usr.Value)
-	bs = lbl.GetUsrBlurb(usrID)
+	err, usrID := userDB.GetUsrID(uname)
+	bs = append(bs, lbl.GetUsrBlurb(usrID)...)
 
 	// Squeeze our blurbs into the template, execute
 	t.Execute(w, bs)
@@ -145,7 +160,7 @@ func BlurbHandler(w http.ResponseWriter, r *http.Request) {
 			panic(err)
 		}
 		if r.URL.Path == "/blurb/add" {
-			// Get uid 
+			// Get uid
 			usr, err := r.Cookie("uname")
 			if err != nil || usr.Value == "" {
 				http.Redirect(w, r, "/login/", http.StatusFound)
@@ -153,14 +168,14 @@ func BlurbHandler(w http.ResponseWriter, r *http.Request) {
 			}
 
 			err, usrID := userDB.GetUsrID(usr.Value)
-			
+
 			// Add blurb
 			content := r.Form.Get("burb-text")
 			newBlurb := blurb.Blurb{
-				Content: content,
-				Timestamp: time.Now().Format("Jan 2 – 15:04 EDT"),
-				BID: strconv.Itoa(bidCounter),
-				CreatorName: usr.Value,		
+				Content:     content,
+				Timestamp:   time.Now().Format("Jan 2 – 15:04 EDT"),
+				BID:         strconv.Itoa(bidCounter),
+				CreatorName: usr.Value,
 			}
 			bidCounter += 1
 
