@@ -30,7 +30,7 @@ func NewLocalLedger() *LocalBlurbLedger {
 	}
 }
 
-func (lbl LocalBlurbLedger) AddNewBlurb(creatorID int, content string, creatorName string) {
+func (lbl *LocalBlurbLedger) AddNewBlurb(creatorID int, content string, creatorName string) {
 	if _, exists := lbl.ledger[creatorID]; !exists {
 		lbl.ledger[creatorID] = make(map[int]Blurb)
 	}
@@ -40,15 +40,16 @@ func (lbl LocalBlurbLedger) AddNewBlurb(creatorID int, content string, creatorNa
 		BID:         lbl.bidCounter,
 		CreatorName: creatorName,
 	}
+
 	lbl.bidCounter++
 	log.Printf("Updated lbl: %v", lbl.ledger)
 }
 
-func (lbl LocalBlurbLedger) RemoveBlurb(creatorID int, bid int) {
+func (lbl *LocalBlurbLedger) RemoveBlurb(creatorID int, bid int) {
 	delete(lbl.ledger[creatorID], bid)
 }
 
-func (lbl LocalBlurbLedger) GetUsrBlurb(creatorID int) []Blurb {
+func (lbl *LocalBlurbLedger) GetUsrBlurb(creatorID int) []Blurb {
 	bs := make([]Blurb, 0)
 	for _, v := range lbl.ledger[creatorID] {
 		bs = append(bs, v)
