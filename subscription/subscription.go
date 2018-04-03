@@ -24,7 +24,7 @@ func (lsl *LocalSubscriptionLedger) AddSub(followerID int, leadearID int) {
 	if _, exists := lsl.ledger[followerID]; !exists {
 		lsl.ledger[followerID] = make(map[int]bool)
 	}
-	// 
+	//
 	lsl.ledger[followerID][leadearID] = true
 	log.Printf("Updated lsl: %v", lsl.ledger)
 }
@@ -47,4 +47,3 @@ func (lsl *LocalSubscriptionLedger) RemoveUsr(uid int) {
 	// Remove his own subscription list
 	delete(lsl.ledger, uid)
 }
-
