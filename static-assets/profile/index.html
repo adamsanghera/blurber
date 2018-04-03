@@ -141,16 +141,16 @@
       </div>
       <br>
       <div class="profile-blurbs">
-        {{range .}}
+        {{range .blurbs}}
         <div class="blurb-container">
           <div class="blurb-header">
-            <div class="blurb-header-username"> {{.CreatorName}} </div>
+            <div class="blurb-header-username"> {{.creatorName}} </div>
           </div>
           <div class="blurb-content">
-            {{.Content}}
+            {{.content}}
           </div>
           <div class="blurb-footer">
-            <div class="blurb-footer-timestamp"> {{.Timestamp}} </div>
+            <div class="blurb-footer-timestamp"> {{.timestamp}} </div>
           </div>
         </div>
         <br>
