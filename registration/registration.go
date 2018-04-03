@@ -8,7 +8,9 @@ import (
 	"time"
 )
 
-type UserLedger interface {
+// Ledger is the interfance for a service that keeps track
+// of user passwords, tokens, screennames, and permanent IDs.
+type Ledger interface {
 	Add(u user, pwd string) error
 	Remove(uname string, pwd string) error
 	LogIn(uname string, pwd string) (error, string) // returns a token
@@ -21,7 +23,9 @@ type Token struct {
 	token        string
 }
 
-type LocalUserLedger struct {
+// LocalLedger is an implementation of Ledger, which uses in-memory data
+// structures to support Ledger's functionality.
+type LocalLedger struct {
 	userSet  map[int]user
 	userID   map[string]int
 	pwdMap   map[int]string
@@ -30,8 +34,10 @@ type LocalUserLedger struct {
 	uidCounter int
 }
 
-func NewLocalLedger() *LocalUserLedger {
-	return &LocalUserLedger{
+// NewLocalLedger initializes and returns a new LocalLedger instance.
+func NewLocalLedger() *LocalLedger {
+	log.Printf("AUTH: Initializing")
+	return &LocalLedger{
 		userSet:    make(map[int]user),
 		userID:     make(map[string]int),
 		pwdMap:     make(map[int]string),
@@ -40,9 +46,13 @@ func NewLocalLedger() *LocalUserLedger {
 	}
 }
 
-// Not threadsafe
-func (lul *LocalUserLedger) AddNewUser(name string, pwd string) error {
-	log.Printf("REGISTRATION: Adding user %s with pwd %s", name, pwd)
+// AddNewUser integrates a new user into the ledger, with 3 operations.
+//   (1) Assignment of a permanent UID
+//   (2) Instantiation of a new User object, associated with the UID
+//   (3) Storage of a provided password, associated with the UID.
+// The ledger's UID counter is then (TODO: thread-safely) incremented.
+func (lul *LocalLedger) AddNewUser(name string, pwd string) error {
+	log.Printf("AUTH: Registering new user %s", name)
 	lul.userSet[lul.uidCounter] = user{
 		Name: name,
 		UID:  lul.uidCounter,
@@ -50,77 +60,94 @@ func (lul *LocalUserLedger) AddNewUser(name string, pwd string) error {
 	lul.userID[name] = lul.uidCounter
 	lul.pwdMap[lul.uidCounter] = pwd
 
+	// TODO: Make threadsafe
 	lul.uidCounter++
 
 	return nil
 }
 
-// Not threadsafe
-func (lul *LocalUserLedger) LogIn(uname string, pwd string) (error, string) {
-	log.Printf("REGISTRATION: Attempting user %s with pwd %s", uname, pwd)
+// LogIn performs a username-check, followed by a password-check.
+// If both checks pass, then a new token is allocated to associated UID, and returned.
+func (lul *LocalLedger) LogIn(uname string, pwd string) (string, error) {
+	log.Printf("AUTH: Logging-in %s", uname)
 
-	id, ok := lul.userID[uname]
-	if !ok {
-		return errors.New("No record of " + uname + " exists"), ""
+	// username-check
+	id, err := lul.GetUserID(uname)
+	if err != nil {
+		return "", err
 	}
 
+	// password-check
 	if lul.pwdMap[id] != pwd {
-		return errors.New("Bad password for " + uname), ""
+		return "", errors.New("Bad password for " + uname)
 	}
 
-	return nil, lul.allocateNewToken(id)
+	return lul.allocateNewToken(id), nil
 }
 
-func (lul *LocalUserLedger) allocateNewToken(id int) string {
+func (lul *LocalLedger) allocateNewToken(uid int) string {
+	// Generate a random token of fixed-length
 	bitString := make([]byte, 256)
 	_, err := rand.Read(bitString)
 	if err != nil {
 		panic(err)
 	}
-
 	token := hex.EncodeToString(bitString)
 
-	lul.tokenMap[id] = Token{token: token, creationDate: time.Now()}
+	// Associate the token with the given uid
+	lul.tokenMap[uid] = Token{token: token, creationDate: time.Now()}
 
 	return token
 }
 
-func (lul *LocalUserLedger) CheckIn(uname string, token string) (error, string) {
-	id, ok := lul.userID[uname]
-	if !ok {
-		return errors.New("No record of " + uname + " exists"), ""
+// CheckIn performs a username-check and a token-check.
+// If both checks pass, then a new token is validated and returned
+func (lul *LocalLedger) CheckIn(uname string, token string) (string, error) {
+	log.Printf("AUTH: Checking-in %s", uname)
+
+	// username-check
+	id, err := lul.GetUserID(uname)
+	if err != nil {
+		return "", err
 	}
 
+	// token-check: part 1
 	if lul.tokenMap[id].token != token {
-		return errors.New("Bad token for " + uname), ""
+		return "", errors.New("Bad token for " + uname)
 	}
 
+	// token-check: part 2
 	if time.Since(lul.tokenMap[id].creationDate) > 30*time.Second {
-		return errors.New("Session expried for " + uname), ""
+		return "", errors.New("Session expried for " + uname)
 	}
 
-	return nil, lul.allocateNewToken(id)
+	return lul.allocateNewToken(id), nil
 }
 
-func (lul *LocalUserLedger) GetUsrID(uname string) (error, int) {
-	log.Printf("REGISTRATION: Getting user %s", uname)
+// GetUserID retrieves the permanent UID associated with uname.
+func (lul *LocalLedger) GetUserID(uname string) (int, error) {
+	log.Printf("AUTH: Retrieving UID for %s", uname)
 
 	id, ok := lul.userID[uname]
 	if !ok {
-		return errors.New("No record of " + uname + " exists"), -1
+		return -1, errors.New("No record of " + uname + " exists")
 	}
-	return nil, id
+	return id, nil
 }
 
-func (lul *LocalUserLedger) Remove(uname string) bool {
-	log.Printf("REGISTRATION: Removing user %s", uname)
+// Remove eliminates all history of uname, including its UID.
+func (lul *LocalLedger) Remove(uname string) error {
+	log.Printf("AUTH: Removing all history of %s", uname)
 
-	id, ok := lul.userID[uname]
-	if !ok { return false }
+	// username-check
+	id, err := lul.GetUserID(uname)
+	if err != nil {
+		return err
+	}
 
 	delete(lul.userID, uname)
 	delete(lul.userSet, id)
 	delete(lul.pwdMap, id)
 	delete(lul.tokenMap, id)
-	return true
+	return nil
 }
