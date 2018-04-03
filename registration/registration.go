@@ -57,7 +57,7 @@ func (lul *LocalUserLedger) LogIn(uname string, pwd string) (error, string) {
 	}
 
 	if lul.pwdMap[id] != pwd {
-		return errors.New("Badd password for " + uname), ""
+		return errors.New("Bad password for " + uname), ""
 	}
 
 	return nil, lul.upsertToken(id)
@@ -92,4 +92,14 @@ func (lul *LocalUserLedger) Authorize(uname string, token string) (error, string
 	}
 
 	return nil, lul.upsertToken(id)
+}
+
+func (lul *LocalUserLedger) GetUsrID(uname string) (error, string) {
+	log.Printf("LOGIN: Getting user %s", uname)
+
+	id, ok := lul.userID[uname]
+	if !ok {
+		return errors.New("No record of " + uname + " exists"), ""
+	}
+	return nil, id
 }
