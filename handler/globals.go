@@ -9,4 +9,3 @@ var userDB = reg.NewLocalLedger()
 var increasingCounter int
 
 var lbl = blurb.NewLocalLedger()
-var bidCounter int

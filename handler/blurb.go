@@ -1,47 +1,50 @@
 package handler
 
 import (
+	"html/template"
 	"log"
 	"net/http"
-	"strconv"
-	"time"
-
-	"../blurb"
 )
 
 func Blurb(w http.ResponseWriter, r *http.Request) {
 	log.Printf("BLURB: URL is <%s>", r.URL.Path)
+
+	validSesh, username := validateSession(w, r)
+	if !validSesh {
+		return
+	}
+
 	if r.Method == "GET" {
 		log.Printf("BLURB: GET")
-		http.FileServer(http.Dir("./static-assets")).ServeHTTP(w, r)
+
+		// Build template
+		t, err := template.ParseFiles("./static-assets/blurb/index.html")
+		if err != nil {
+			panic(err)
+		}
+
+		t.Execute(w, nil)
+
 	} else {
+		// Parse the form
 		err := r.ParseForm()
 		if err != nil {
 			panic(err)
 		}
+
 		if r.URL.Path == "/blurb/add" {
-			// Get uid
-			usr, err := r.Cookie("uname")
-			if err != nil || usr.Value == "" {
-				http.Redirect(w, r, "/login/", http.StatusFound)
+			// Determine uid
+			err, usrID := userDB.GetUsrID(username)
+			if err != nil {
+				w.Write([]byte("Something went wrong\n"))
 				return
 			}
 
-			err, usrID := userDB.GetUsrID(usr.Value)
-
-			// Add blurb
+			// Create blurb
 			content := r.Form.Get("burb-text")
-			newBlurb := blurb.Blurb{
-				Content:     content,
-				Timestamp:   time.Now().Format("Jan 2 – 15:04 EDT"),
-				BID:         strconv.Itoa(bidCounter),
-				CreatorName: usr.Value,
-			}
-			bidCounter += 1
+			lbl.AddNewBlurb(usrID, content, username)
 
-			lbl.AddBlurb(usrID, newBlurb)
-
-			log.Printf("BLURB: User %v (id %v) - New blurb added: %v", usr.Value, usrID, content)
+			log.Printf("BLURB: User %v (id %v) - New blurb added: %v", username, usrID, content)
 
 			http.Redirect(w, r, "/feed/", http.StatusFound)
 		} else {
