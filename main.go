@@ -13,9 +13,8 @@ func main() {
 	http.HandleFunc("/login/", handler.Login)
 	http.HandleFunc("/feed/", handler.Feed)
 	http.HandleFunc("/blurb/", handler.Blurb)
-	http.HandleFunc("/subscribe", handler.Subscribe)
+	http.HandleFunc("/subscribe/", handler.Subscribe)
 	http.HandleFunc("/profile/", handler.Profile)
-
 	http.HandleFunc("/removeAcc/", handler.RemoveAcc)
 
 	http.ListenAndServe(":4000", nil)

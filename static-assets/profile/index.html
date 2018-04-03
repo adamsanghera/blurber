@@ -102,11 +102,22 @@
         font-size: 90%;
         font-family: Garamond;
       }
+
+      .profile-remove-box {
+        text-align: right;
+        padding-bottom: 15px;
+      }
+
+      .profile-remove-box button {
+        background: #d43f3a;
+        color: #fff;
+      }
     </style>
     <meta http-equiv="cache-control" content="no-cache"/>
   </head>
   
   <body>
+    <!-- TITLE AND NAVBAR COMPONENT -->
     <h1 class="title">
      📡 Blurber 📡
     </h1>
@@ -121,16 +132,27 @@
         <a href='/feed' class="menu-button">
           Feed
         </a>
-        <div action='/lookup/user' class="menu-button">
-          Subscribe
+        <div class="menu-button">
+          <form action="/subscribe" method='post' class='subscribe-box'>
+            <button type="submit">Subscribe</button>
+            <input type="text" name="subscribe-leader" required="required">
+          </form>
         </div>
       </div>
     </div>
+    <!-- END OF TITLE AND NAVBAR COMPONENT -->
 
     <div class="profile">
       <div class="profile-title">
         Profile of {{.Username}}
       </div>
+
+      <div class="profile-remove">
+        <form action="/removeAcc" method="POST" class="profile-remove-box">
+          <button type="submit" onclick="return confirm('Are you sure?')">DELETE ACCOUNT</button>
+        </form>        
+      </div>
+
       <div class="profile-about">
         <div class="profile-about-name">
           {{.Name}}
