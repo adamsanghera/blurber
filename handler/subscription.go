@@ -20,7 +20,7 @@ func Subscribe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// No posts allowed
+	// Only posts allowed
 	if r.Method != "POST" {
 		return
 	}
@@ -33,8 +33,8 @@ func Subscribe(w http.ResponseWriter, r *http.Request) {
 
 	// Obtain all variables
 	leaderName := r.Form.Get("subscribe-leader")
-	uID, err := userDB.GetUserID(uname)
-	lID, lErr := userDB.GetUserID(leaderName)
+	uid, err := userDB.GetUserID(uname)
+	lid, lErr := userDB.GetUserID(leaderName)
 
 	// Verify leader exists
 	if lErr != nil {
@@ -43,13 +43,14 @@ func Subscribe(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Cannot self-subscribe
-	if uID == lID {
+	if uid == lid {
 		w.Write([]byte("You can't subscribe to yourself :(\n"))
 		return
 	}
 
 	// Submit subscription request to ledger
-	subDB.AddSub(uID, lID)
+	subDB.AddSub(uid, lid)
+	blurbDB.InvalidateCache(uid)
 
 	// Redirect to feed
 	http.Redirect(w, r, "/feed/", http.StatusFound)

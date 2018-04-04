@@ -27,10 +27,30 @@ func Feed(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	// TODO: Implement real logic here.
-	// Obtain our blurb list
-	usrID, err := userDB.GetUserID(uname)
-	bs := blurbDB.GetBlurbsCreatedBy(usrID)
+	// Get our UID
+	uid, err := userDB.GetUserID(uname)
+	if err != nil {
+		w.Write([]byte("Something went very wrong"))
+		panic(err)
+	}
+
+	// Get the leader map for UID
+	leaderSet, err := subDB.GetLeaders(uid)
+	if err != nil {
+		w.Write([]byte("Something went very wrong"))
+		panic(err)
+	}
+
+	// Extract ids from the leader map
+	leaderIDs := make([]int, len(leaderSet))
+	i := 0
+	for id := range leaderSet {
+		leaderIDs[i] = id
+		i++
+	}
+
+	// Generate the feed
+	bs := blurbDB.GenerateFeed(uid, leaderIDs)
 
 	// Squeeze our blurbs into the template, execute
 	t.Execute(w, bs)

@@ -3,6 +3,7 @@ package blurb
 import (
 	"log"
 	"sync"
+	"time"
 )
 
 // Ledger is the interface for a service that maintains
@@ -12,6 +13,11 @@ type Ledger interface {
 	RemoveBlurb(creator string, b Blurb)
 }
 
+type FeedCache struct {
+	timestamp  time.Time
+	sortedFeed []Blurb
+}
+
 // LocalLedger is an implementation of Ledger, making use
 // of in-memory data structures to record blurbs
 type LocalLedger struct {
@@ -19,7 +25,8 @@ type LocalLedger struct {
 	bidCounter int
 	bidMutex   sync.Mutex
 
-	ledger map[int]*BlurbBox
+	ledger    map[int]*BlurbBox
+	feedCache map[int]FeedCache
 }
 
 // NewLocalLedger returns a new and initialized LocalLedger
@@ -27,6 +34,7 @@ func NewLocalLedger() *LocalLedger {
 	log.Printf("BLURB-LEDGER: Initializing")
 	return &LocalLedger{
 		ledger:     make(map[int]*BlurbBox),
+		feedCache:  make(map[int]FeedCache),
 		bidCounter: 0,
 		bidMutex:   sync.Mutex{},
 	}
