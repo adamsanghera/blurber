@@ -58,3 +58,8 @@ func (ll *LocalLedger) RemoveUser(uid int) {
 	// Remove his own subscription list
 	delete(ll.ledger, uid)
 }
+
+// GetLeaders obtains all subscriptions of the form (uid -> X) from the ledger
+func (ll *LocalLedger) GetLeaders(uid int) (map[int]bool, error) {
+	return ll.ledger[uid], nil
+}

@@ -1,6 +1,8 @@
 package blurb
 
-import "log"
+import (
+	"log"
+)
 
 // GetBlurbsCreatedBy returns all blurbs created by a given user.
 func (ll *LocalLedger) GetBlurbsCreatedBy(creatorID int) []Blurb {
