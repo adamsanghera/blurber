@@ -8,3 +8,8 @@ func (ll *LocalLedger) GetBlurbsCreatedBy(creatorID int) []Blurb {
 
 	return ll.ledger[creatorID].snapshot()
 }
+
+func (ll *LocalLedger) GetRecentBlurbsBy(creatorID int) []Blurb {
+	log.Printf("BLURB-LEDGER: Retrieving blurb cache for %d", creatorID)
+	return ll.ledger[creatorID].sortedCache()
+}

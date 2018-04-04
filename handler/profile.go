@@ -4,7 +4,6 @@ import (
 	"html/template"
 	"log"
 	"net/http"
-	"sort"
 	"time"
 
 	"../blurb"
@@ -38,10 +37,7 @@ func Profile(w http.ResponseWriter, req *http.Request) {
 	}
 
 	// Obtain and sort blurb
-	blurbs := blurbDB.GetBlurbsCreatedBy(uid)
-	sort.Slice(blurbs, func(i, j int) bool {
-		return blurbs[i].Time.After(blurbs[j].Time)
-	})
+	blurbs := blurbDB.GetRecentBlurbsBy(uid)
 
 	// Create a data packet to send back
 	data := struct {
