@@ -29,6 +29,10 @@ func (ll *LocalLedger) GenerateFeed(readerID int, sources []int) []Blurb {
 		return ret[i].Time.After(ret[j].Time)
 	})
 
+	if len(ret) > 100 {
+		ret = ret[:100]
+	}
+
 	// Store the result in the cache
 	ll.feedCache[readerID] = FeedCache{
 		sortedFeed: ret,
