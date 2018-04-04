@@ -3,14 +3,16 @@ package blurb
 import "sync"
 
 type BlurbBox struct {
-	Box     map[int]Blurb
-	BoxLock sync.Mutex
+	Box         map[int]Blurb
+	SortedCache []Blurb
+	BoxLock     sync.Mutex
 }
 
 func NewBlurbBox() *BlurbBox {
 	return &BlurbBox{
-		Box:     make(map[int]Blurb),
-		BoxLock: sync.Mutex{},
+		Box:         make(map[int]Blurb),
+		BoxLock:     sync.Mutex{},
+		SortedCache: make([]Blurb, 0),
 	}
 }
 
