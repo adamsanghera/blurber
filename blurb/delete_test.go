@@ -82,6 +82,15 @@ func TestLocalLedger_RemoveBlurb(t *testing.T) {
 					t.Errorf("Cache contains the supposedly deleted blurb")
 				}
 			}
+
+			for idx := range cachedBlurbs {
+				if idx > 1 {
+					if cachedBlurbs[idx].Time.After(cachedBlurbs[idx-1].Time) {
+						t.Errorf("Cache is out of order: {%s} is placed before {%s}", cachedBlurbs[idx-1].Timestamp, cachedBlurbs[idx].Timestamp)
+					}
+				}
+			}
+
 		})
 	}
 }
