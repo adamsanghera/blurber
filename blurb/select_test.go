@@ -61,7 +61,7 @@ func TestLocalLedger_GetRecentBlurbsBy(t *testing.T) {
 
 			recentBlurbs := ll.GetRecentBlurbsBy(0)
 
-			if len(recentBlurbs) > 10 {
+			if len(recentBlurbs) != min(10, tt.numBlurbs) {
 				t.Errorf("GetRecentBlurbsBy returned a list (size %d) of the wrong size", len(recentBlurbs))
 			}
 
