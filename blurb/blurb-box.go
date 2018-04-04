@@ -27,8 +27,8 @@ func (bb *BlurbBox) insert(b Blurb) {
 
 	bb.SortedCache = append([]Blurb{b}, bb.SortedCache...)
 
-	if len(bb.SortedCache) > 25 {
-		bb.SortedCache = bb.SortedCache[:24]
+	if len(bb.SortedCache) > 10 {
+		bb.SortedCache = bb.SortedCache[:9]
 	}
 
 	log.Printf("Sorted cache:\n %v", bb.SortedCache)

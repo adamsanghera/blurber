@@ -12,4 +12,5 @@ func (ll *LocalLedger) RemoveBlurb(creatorID int, bid int) {
 func (ll *LocalLedger) RemoveAllBlurbsBy(creatorID int) {
 	log.Printf("BLURB-LEDGER: Removing all blurbs by %d", creatorID)
 	delete(ll.ledger, creatorID)
+	delete(ll.feedCache, creatorID)
 }
