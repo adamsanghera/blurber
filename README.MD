@@ -3,9 +3,9 @@
 ## Main features
 
 - [x] Login/ register
-- [ ] Delete account
-- [ ] Write blurb
-- [ ] Subscribe to blurbers
+- [X] Delete account
+- [X] Write blurb
+- [X] Subscribe to blurbers
 - [ ] Unsubscribe on feed
 - [ ] Feed: show all blurbs ('Discover') vs. just subscription
 
