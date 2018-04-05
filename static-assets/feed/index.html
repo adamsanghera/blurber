@@ -88,6 +88,14 @@
       .unsub-box input {
         display: none;
       }
+      .unsub-box button {
+        background: none;
+        border: none;
+      }
+      .unsub-box a {
+        text-decoration: underline;
+        color: blue;
+      }
     </style>
     <meta http-equiv="cache-control" content="no-cache"/>
   </head>
@@ -141,7 +149,8 @@
 
             <form action="/unsubscribe/" method="post" class="unsub-box">
               <input type="text" name="blurber" value="{{.CreatorName}}"></input>
-              <button type="submit"> ✖️ unsubscribe</button>
+              <button type="submit">(<a href="">unsubscribe</a>)</button>
+
             </form>
           </div>
 
