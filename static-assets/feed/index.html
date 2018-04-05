@@ -82,6 +82,12 @@
         color: black;
         text-decoration: none;
       }
+      .unsub-box {
+        display: inline;
+      }
+      .unsub-box input {
+        display: none;
+      }
     </style>
     <meta http-equiv="cache-control" content="no-cache"/>
   </head>
@@ -130,7 +136,15 @@
       {{range .}}
       <div class="blurb-container">
         <div class="blurb-header">
-          <div class="blurb-header-username"> {{.CreatorName}} </div>
+          <div class="blurb-header-username"> 
+            <span>{{.CreatorName}}</span>
+
+            <form action="/unsubscribe/" method="post" class="unsub-box">
+              <input type="text" name="blurber" value="{{.CreatorName}}"></input>
+              <button type="submit"> ✖️ unsubscribe</button>
+            </form>
+          </div>
+
         </div>
         <div class="blurb-content">
           {{.Content}}
