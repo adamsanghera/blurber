@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"time"
+	"strconv"
 )
 
 func Blurb(w http.ResponseWriter, r *http.Request) {
@@ -16,6 +17,8 @@ func Blurb(w http.ResponseWriter, r *http.Request) {
 	}()
 
 	validSesh, username := validateSession(w, r)
+	log.Printf("after...")
+
 	if !validSesh {
 		return
 	}
@@ -30,8 +33,11 @@ func Blurb(w http.ResponseWriter, r *http.Request) {
 		t.Execute(w, nil)
 		return
 	}
+	log.Printf("after GET")
 
 	if r.Method == "POST" {
+		log.Printf("%v", r.URL.Path)
+
 		// Parse the form
 		err := r.ParseForm()
 		if err != nil {
@@ -55,6 +61,25 @@ func Blurb(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		if r.URL.Path == "/blurb/remove" {
+			log.Printf("REMOVE")
+
+			// Retrieve uid
+			usrID, err := userDB.GetUserID(username)
+			if err != nil {
+				w.Write([]byte("Something went wrong\n\terr: " + err.Error()))
+				return
+			}
+
+			sBid := r.Form.Get("remove-bid")
+			bid, _ := strconv.Atoi(sBid)
+			blurbDB.RemoveBlurb(usrID, bid)
+
+			http.Redirect(w, r, "/profile/", http.StatusFound)
+			return
+		}		
+
 		w.Write([]byte("Something went wrong\n"))
 	}
+	log.Printf("after POST")
 }

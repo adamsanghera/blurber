@@ -112,6 +112,19 @@
         background: #d43f3a;
         color: #fff;
       }
+      
+      .unsub-box {
+        display: inline;
+      }
+      .unsub-box input {
+        display: none;
+      }
+      .unsub-box button {
+        background: none;
+        border: none;
+        text-decoration: underline;
+        color: blue;
+      }      
     </style>
     <meta http-equiv="cache-control" content="no-cache"/>
   </head>
@@ -164,14 +177,20 @@
       </div>
       <br>
       <div class="profile-blurbs-title">
-        Blurbs
+        My Blurbs
       </div>
       <br>
       <div class="profile-blurbs">
         {{range .Blurbs}}
         <div class="blurb-container">
           <div class="blurb-header">
-            <div class="blurb-header-username"> {{.CreatorName}} </div>
+            <div class="blurb-header-username"> 
+              <span>{{.CreatorName}}</span>
+              <form action="/blurb/remove" method="post" class="unsub-box">
+                <input type="text" name="remove-bid" value="{{.BID}}"></input>
+                <button type="submit">delete</button>
+              </form>
+            </div>
           </div>
           <div class="blurb-content">
             {{.Content}}
