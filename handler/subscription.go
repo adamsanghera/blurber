@@ -21,6 +21,7 @@ func Subscribe(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Only posts allowed
+	log.Printf("%v", r.Method)
 	if r.Method != "POST" {
 		return
 	}
@@ -69,7 +70,7 @@ func Unsubscribe(w http.ResponseWriter, r *http.Request) {
 	if !validSesh {
 		return
 	}
-	log.Printf("before")
+
 	// Only posts allowed
 	if r.Method != "POST" {
 		log.Printf("whoops %v",r.Method)
@@ -87,9 +88,7 @@ func Unsubscribe(w http.ResponseWriter, r *http.Request) {
 	uid, _ := userDB.GetUserID(uname)
 	lid, _ := userDB.GetUserID(leaderName)
 
-	log.Printf("%v %v", uid, lid)
-
-	// Submit subscription request to ledger
+	// Send unsubscription request to ledger
 	subDB.RemoveSub(uid, lid)
 	blurbDB.InvalidateCache(uid)
 

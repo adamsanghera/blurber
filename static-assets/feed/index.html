@@ -91,8 +91,6 @@
       .unsub-box button {
         background: none;
         border: none;
-      }
-      .unsub-box a {
         text-decoration: underline;
         color: blue;
       }
@@ -134,12 +132,6 @@
         <div class="menu-button">
           <a href="/blurb">Write</a>
         </div>
-        <div action='/feed/unread' class="menu-button">
-          Unread
-        </div>
-        <div action='/feed/all' class="menu-button">
-          All
-        </div>
       </div>
       {{range .}}
       <div class="blurb-container">
@@ -149,8 +141,7 @@
 
             <form action="/unsubscribe/" method="post" class="unsub-box">
               <input type="text" name="blurber" value="{{.CreatorName}}"></input>
-              <button type="submit">(<a href="">unsubscribe</a>)</button>
-
+              <button type="submit">unsubscribe</button>
             </form>
           </div>
 
