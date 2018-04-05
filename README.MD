@@ -6,7 +6,9 @@
 - [X] Delete account
 - [X] Write blurb
 - [X] Subscribe to blurbers
-- [ ] Unsubscribe on feed
+- [x] Unsubscribe on feed
+- [x] Simple profile page
+- [x] Delete personal single blurbs
 - [ ] Feed: show all blurbs ('Discover') vs. just subscription
 
 
