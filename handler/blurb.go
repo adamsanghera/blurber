@@ -17,7 +17,6 @@ func Blurb(w http.ResponseWriter, r *http.Request) {
 	}()
 
 	validSesh, username := validateSession(w, r)
-	log.Printf("after...")
 
 	if !validSesh {
 		return
@@ -33,10 +32,8 @@ func Blurb(w http.ResponseWriter, r *http.Request) {
 		t.Execute(w, nil)
 		return
 	}
-	log.Printf("after GET")
 
 	if r.Method == "POST" {
-		log.Printf("%v", r.URL.Path)
 
 		// Parse the form
 		err := r.ParseForm()
@@ -62,8 +59,6 @@ func Blurb(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if r.URL.Path == "/blurb/remove" {
-			log.Printf("REMOVE")
-
 			// Retrieve uid
 			usrID, err := userDB.GetUserID(username)
 			if err != nil {
@@ -81,5 +76,4 @@ func Blurb(w http.ResponseWriter, r *http.Request) {
 
 		w.Write([]byte("Something went wrong\n"))
 	}
-	log.Printf("after POST")
 }
