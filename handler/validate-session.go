@@ -33,7 +33,7 @@ func validateSession(w http.ResponseWriter, r *http.Request) (bool, string) {
 	// Make sure that the token matches the username
 	token, err := userDB.CheckIn(cookieUsername.Value, cookieToken.Value)
 	if err != nil {
-		http.Redirect(w, r, "/login/", http.StatusFound)
+		http.Redirect(w, r, "/login/expired/", http.StatusFound)
 		log.Printf("HANDLERS-VALIDATE: Failed & Redirected")
 		return false, ""
 	}

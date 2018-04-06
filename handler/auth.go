@@ -20,6 +20,16 @@ func Auth(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			panic(err)
 		}
+
+		msg := struct {
+			ErrMsg string
+		}{}
+		if r.URL.Path == "/login/expired/" {
+			msg.ErrMsg = "Sorry, your session expired"
+			t.Execute(w, msg)
+			return
+		}
+
 		t.Execute(w, nil)
 		return
 	}
@@ -48,7 +58,12 @@ func Auth(w http.ResponseWriter, r *http.Request) {
 			err := userDB.AddNewUser(username, password)
 
 			if err != nil {
-				w.Write([]byte(err.Error()))
+				t, tempErr := template.ParseFiles("./static-assets/login/index.html")
+				if tempErr != nil {
+					panic(tempErr)
+				}
+
+				t.Execute(w, struct{ ErrMsg string }{err.Error()})
 				return
 			}
 		} else {
@@ -60,7 +75,12 @@ func Auth(w http.ResponseWriter, r *http.Request) {
 
 		token, err := userDB.LogIn(username, password)
 		if err != nil {
-			w.Write([]byte(err.Error()))
+			t, tempErr := template.ParseFiles("./static-assets/login/index.html")
+			if tempErr != nil {
+				panic(tempErr)
+			}
+
+			t.Execute(w, struct{ ErrMsg string }{err.Error()})
 			return
 		}
 
