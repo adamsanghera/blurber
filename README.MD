@@ -14,5 +14,9 @@
 
 ## How to run
 
-1. `go run main.go` or `DEBUG=1 go run main.go`
-1. `http://localhost:4000/login/`
+1. `PORT=4000 go run main.go` or `PORT=4000 DEBUG=1 go run main.go`
+1. `http://localhost:4000`
+
+## In the Wild
+
+This app can also be found deployed on heroku, at https://dist-blurber.herokuapp.com/
