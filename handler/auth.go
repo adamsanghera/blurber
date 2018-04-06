@@ -30,14 +30,22 @@ func Auth(w http.ResponseWriter, r *http.Request) {
 			panic(err)
 		}
 
+		var username string
+		var password string
+
 		if r.URL.Path == "/login/existing" {
 			// Login
 			log.Printf("HANDLERS-AUTH: Log-in request received")
+			username = r.Form.Get("login-user")
+			password = r.Form.Get("login-pass")
 
 		} else if r.URL.Path == "/login/new" {
 			// Registration
 			log.Printf("HANDLERS-AUTH: Registration request received")
-			err := userDB.AddNewUser(r.Form.Get("reg-user"), r.Form.Get("reg-pass"))
+			username = r.Form.Get("reg-user")
+			password = r.Form.Get("reg-pass")
+
+			err := userDB.AddNewUser(username, password)
 
 			if err != nil {
 				w.Write([]byte(err.Error()))
@@ -50,7 +58,7 @@ func Auth(w http.ResponseWriter, r *http.Request) {
 
 		// Actually log the user in
 
-		token, err := userDB.LogIn(r.Form.Get("login-user"), r.Form.Get("login-pass"))
+		token, err := userDB.LogIn(username, password)
 		if err != nil {
 			w.Write([]byte(err.Error()))
 			return
@@ -66,7 +74,7 @@ func Auth(w http.ResponseWriter, r *http.Request) {
 
 		nameCook := &http.Cookie{
 			Name:    "uname",
-			Value:   r.Form.Get("login-user"),
+			Value:   username,
 			Expires: time.Now().Add(24 * time.Hour),
 			Path:    "/",
 		}
