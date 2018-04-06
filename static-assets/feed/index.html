@@ -83,7 +83,7 @@
         text-decoration: none;
       }
       .unsub-box {
-        display: inline;
+        float: right;
       }
       .unsub-box input {
         display: none;
@@ -91,8 +91,29 @@
       .unsub-box button {
         background: none;
         border: none;
+        text-decoration: none;
+        color: rgb(46, 75, 161);
+        font-size: 70%;
+      }
+      .unsub-box button:hover::before {
+        content: "🙋";
+        background: none;
+        border: none;
         text-decoration: underline;
-        color: blue;
+        color: rgb(157, 27, 27);
+      }
+      .unsub-box button:hover::after {
+        content: "🙋";
+        background: none;
+        border: none;
+        text-decoration: underline;
+        color: rgb(157, 27, 27);
+      }
+      .unsub-box button:hover {
+        background: none;
+        border: none;
+        text-decoration: underline;
+        color: rgb(157, 27, 27);
       }
     </style>
     <meta http-equiv="cache-control" content="no-cache"/>
@@ -137,13 +158,12 @@
       <div class="blurb-container">
         <div class="blurb-header">
           <div class="blurb-header-username"> 
-            <span>{{.CreatorName}}</span>
-
-            <form action="/unsubscribe/" method="post" class="unsub-box">
-              <input type="text" name="blurber" value="{{.CreatorName}}"></input>
-              <button type="submit">🙅‍unsubscribe</button>
-            </form>
+            <div>{{.CreatorName}}</div>
           </div>
+          <form action="/unsubscribe/" method="post" class="unsub-box">
+            <input type="text" name="blurber" value="{{.CreatorName}}"></input>
+            <button type="submit" class='unhover'>‍unsubscribe</button>            
+          </form>
 
         </div>
         <div class="blurb-content">

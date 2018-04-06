@@ -1,6 +1,18 @@
 <!DOCTYPE html> 
 
 <html>
+    <script src="https://code.jquery.com/jquery-1.10.2.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      $("#future").hover(
+        function() {
+          $(this).attr("src", "https://i.imgur.com/BQ4Nzsm.jpg");
+        }, function() {
+          $(this).attr("src", "https://i.imgur.com/LFn1ZMQ.jpg");
+        }
+      )
+    })
+  </script>
   <head>
     <style>
       h1 {
@@ -13,6 +25,10 @@
       
       body {
         text-align: center;
+      }
+
+      .future {
+        border: 5px black solid;
       }
       
       .login-reg-box {
@@ -73,6 +89,8 @@
     <h2>
       Login Page
     </h2>
+    <img class='future' id='future' src="https://i.imgur.com/LFn1ZMQ.jpg" width='150' height='100'></img>
+    <br>
     <div class="login-reg-box">
       <form action='/login/existing' method='post' class="login-box">
         <div class='login-title'>
@@ -103,7 +121,6 @@
         </button>
       </form>
     </div>
-  
   </body>
   
   <footer>
