@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/adamsanghera/blurber/handler"
 )
@@ -18,5 +19,5 @@ func main() {
 	http.HandleFunc("/profile/", handler.Profile)
 	http.HandleFunc("/removeAcc/", handler.RemoveAcc)
 
-	http.ListenAndServe(":4000", nil)
+	http.ListenAndServe(":"+os.Getenv("PORT"), nil)
 }
