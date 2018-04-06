@@ -20,6 +20,16 @@ func Auth(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			panic(err)
 		}
+
+		msg := struct {
+			ErrMsg string
+		}{}
+		if r.URL.Path == "/login/expired/" {
+			msg.ErrMsg = "Sorry, your session expired"
+			t.Execute(w, msg)
+			return
+		}
+
 		t.Execute(w, nil)
 		return
 	}

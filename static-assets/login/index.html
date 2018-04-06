@@ -70,7 +70,7 @@
       
       label {
         color: black;
-        font-size: 12px;
+        font-size: 90%;
         font-family: Garamond;
       }
       
@@ -78,6 +78,16 @@
         text-align: center;
         font-size: 70%;
       }
+
+      .login-err-box {
+        color: maroon;
+        border: 2px orangered solid;
+        font-family: Garamond;
+        font-size: 90%;
+        padding: 2.5%;
+        margin: 2.5%;
+      }
+
     </style>
     <meta http-equiv="cache-control" content="no-cache" />
   </head>
@@ -92,6 +102,13 @@
     <img class='future' id='future' title='hype.jpg' src="https://i.imgur.com/LFn1ZMQ.jpg" width='150' height='100'></img>
     <br>
     <div class="login-reg-box">
+      {{if . }}
+        <div class="login-err-box">
+          Achtung! {{ .ErrMsg }}
+        </div>
+      {{else}}
+      {{end}}
+
       <form action='/login/existing' method='post' class="login-box">
         <div class='login-title'>
           Login 🔑
