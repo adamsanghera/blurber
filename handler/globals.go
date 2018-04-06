@@ -1,9 +1,9 @@
 package handler
 
 import (
-	"../blurb"
-	reg "../registration"
-	sub "../subscription"
+	"github.com/adamsanghera/blurber/blurb"
+	reg "github.com/adamsanghera/blurber/registration"
+	sub "github.com/adamsanghera/blurber/subscription"
 )
 
 var userDB = reg.NewLocalLedger()

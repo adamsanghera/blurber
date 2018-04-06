@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"time"
 
-	"../blurb"
+	"github.com/adamsanghera/blurber/blurb"
 )
 
 // Profile is the handler for /profile/ requests

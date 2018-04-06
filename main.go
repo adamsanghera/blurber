@@ -4,7 +4,7 @@ import (
 	"log"
 	"net/http"
 
-	"./handler"
+	"github.com/adamsanghera/blurber/handler"
 )
 
 func main() {
