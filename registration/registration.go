@@ -53,6 +53,11 @@ func NewLocalLedger() *LocalLedger {
 // The ledger's UID counter is then (TODO: thread-safely) incremented.
 func (lul *LocalLedger) AddNewUser(name string, pwd string) error {
 	log.Printf("AUTH-LEDGER: Registering new user %s", name)
+
+	if _, exists := lul.userID[name]; exists {
+		return errors.New("A user with that name already exists")
+	}
+
 	lul.userSet[lul.uidCounter] = user{
 		Name: name,
 		UID:  lul.uidCounter,
