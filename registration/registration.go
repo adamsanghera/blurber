@@ -122,11 +122,30 @@ func (lul *LocalLedger) CheckIn(uname string, token string) (string, error) {
 	}
 
 	// token-check: part 2
-	if time.Since(lul.tokenMap[id].creationDate) > 30*time.Second {
+	if time.Since(lul.tokenMap[id].creationDate) > 30*time.Minute {
 		return "", errors.New("Session expried for " + uname)
 	}
 
 	return lul.allocateNewToken(id), nil
+}
+
+func (lul *LocalLedger) CheckOut(uname string, token string) (error) {
+	log.Printf("AUTH-LEDGER: Checking-out %s", uname)
+
+	// username-check
+	id, err := lul.GetUserID(uname)
+	if err != nil {
+		return err
+	}
+
+	// token-check
+	if lul.tokenMap[id].token != token {
+		return errors.New("Bad token for " + uname)
+	}
+	
+	lul.tokenMap[id].creationDate = time.Unix(0, 0)
+
+	return nil
 }
 
 // GetUserID retrieves the permanent UID associated with uname.
