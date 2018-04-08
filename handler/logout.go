@@ -18,24 +18,24 @@ func LogOut(w http.ResponseWriter, r *http.Request) {
     cookieToken, err := r.Cookie("token")
     if err != nil || cookieToken.Value == "" {
         http.Redirect(w, r, "/login/", http.StatusFound)
-        log.Printf("HANDLERS-VALIDATE: Failed & Redirected")
-        return false, ""
+        log.Printf("HANDLERS-LOGOUT: Failed & Redirected")
+        return
     }
 
     // Check the cookie jar for a username
     cookieUsername, err := r.Cookie("uname")
     if err != nil || cookieUsername.Value == "" {
         http.Redirect(w, r, "/login/", http.StatusFound)
-        log.Printf("HANDLERS-VALIDATE: Failed & Redirected")
-        return false, ""
+        log.Printf("HANDLERS-LOGOUT: Failed & Redirected")
+        return
     }
 
     // Reset token
     err := userDB.CheckOut(cookieUsername.Value, cookieToken.Value)
     if err != nil {
         http.Redirect(w, r, "/login/expired/", http.StatusFound)
-        log.Printf("HANDLERS-VALIDATE: Failed & Redirected")
-        return false, ""
+        log.Printf("HANDLERS-LOGOUT: Failed & Redirected")
+        return
     }
 
     // Set cookies to expire
