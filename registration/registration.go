@@ -143,7 +143,7 @@ func (lul *LocalLedger) CheckOut(uname string, token string) (error) {
 		return errors.New("Bad token for " + uname)
 	}
 	
-	lul.tokenMap[id].creationDate = time.Unix(0, 0)
+	delete(lul.tokenMap, id)
 
 	return nil
 }
