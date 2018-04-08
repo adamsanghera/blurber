@@ -6,7 +6,7 @@ import (
     "time"
 )
 
-func LogOut(w http.ResponseWriter, r *http.Request) {
+func Logout(w http.ResponseWriter, r *http.Request) {
     log.Printf("HANDLERS-LOGOUT: Request received")
 
     start := time.Now()
@@ -31,7 +31,7 @@ func LogOut(w http.ResponseWriter, r *http.Request) {
     }
 
     // Reset token
-    err := userDB.CheckOut(cookieUsername.Value, cookieToken.Value)
+    err = userDB.CheckOut(cookieUsername.Value, cookieToken.Value)
     if err != nil {
         http.Redirect(w, r, "/login/expired/", http.StatusFound)
         log.Printf("HANDLERS-LOGOUT: Failed & Redirected")
