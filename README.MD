@@ -14,29 +14,29 @@
 ## Roadmap for detaching backend
 
 1. [X] Define protobufs for each backend service:
-  - [X] BlurbDB
-  - [X] UserDB
-  - [X] SubscriptionDB
+1. - [X] BlurbDB
+1. - [X] UserDB
+1. - [X] SubscriptionDB
 1. [ ] Split off backends to be behind a GRPC call:
-  - [ ] BlurbDB
-  - [ ] UserDB
-  - [ ] SubscriptionDB
+1. - [ ] BlurbDB
+1. - [ ] UserDB
+1. - [ ] SubscriptionDB
 1. [ ] Ensure that backends are safe to concurrent access from multiple frontends
-  - [ ] BlurbDB
-  - [ ] UserDB
-  - [ ] SubscriptionDB
+1. - [ ] BlurbDB
+1. - [ ] UserDB
+1. - [ ] SubscriptionDB
 
 These will be managed in branches:
 
 1. `protobufs`
 1. `split`
-  - `split-blurb`
-  - `split-user`
-  - `split-subscription`
+1. - `split-blurb`
+1. - `split-user`
+1. - `split-subscription`
 1. `safe`
-  - `safe-blurb`
-  - `safe-user`
-  - `safe-subscription`
+1. - `safe-blurb`
+1. - `safe-user`
+1. - `safe-subscription`
 
 ## How to run
 
