@@ -11,6 +11,32 @@
 - [x] Delete personal single blurbs
 - [ ] Feed: show all blurbs ('Discover') vs. just subscription
 
+## Roadmap for detaching backend
+
+1. [X] Define protobufs for each backend service:
+  - [X] BlurbDB
+  - [X] UserDB
+  - [X] SubscriptionDB
+1. [ ] Split off backends to be behind a GRPC call:
+  - [ ] BlurbDB
+  - [ ] UserDB
+  - [ ] SubscriptionDB
+1. [ ] Ensure that backends are safe to concurrent access from multiple frontends
+  - [ ] BlurbDB
+  - [ ] UserDB
+  - [ ] SubscriptionDB
+
+These will be managed in branches:
+
+1. `protobufs`
+1. `split`
+  - `split-blurb`
+  - `split-user`
+  - `split-subscription`
+1. `safe`
+  - `safe-blurb`
+  - `safe-user`
+  - `safe-subscription`
 
 ## How to run
 
