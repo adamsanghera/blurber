@@ -15,20 +15,20 @@
 
 1. [X] Define protobufs for each backend service:
 
-  - [X] BlurbDB
-  - [X] UserDB
-  - [X] SubscriptionDB
+       - [X] BlurbDB
+       - [X] UserDB
+       - [X] SubscriptionDB
 
-2. [ ] Split off backends to be behind a GRPC call:
+1. [ ] Split off backends to be behind a GRPC call:
 
-  - [ ] BlurbDB
-  - [ ] UserDB
-  - [ ] SubscriptionDB
+       - [ ] BlurbDB
+       - [ ] UserDB
+       - [ ] SubscriptionDB
 
-3. [ ] Ensure that backends are safe to concurrent access from multiple frontends
-  - [ ] BlurbDB
-  - [ ] UserDB
-  - [ ] SubscriptionDB
+1. [ ] Ensure that backends are safe to concurrent access from multiple frontends
+       - [ ] BlurbDB
+       - [ ] UserDB
+       - [ ] SubscriptionDB
 
 These will be managed in branches:
 
@@ -36,15 +36,15 @@ These will be managed in branches:
 
 2. `split`
 
-  - `split-blurb`
-  - `split-user`
-  - `split-subscription`
+    - `split-blurb`
+    - `split-user`
+    - `split-subscription`
 
 3. `safe`
 
-  - `safe-blurb`
-  - `safe-user`
-  - `safe-subscription`
+    - `safe-blurb`
+    - `safe-user`
+    - `safe-subscription`
 
 ## How to run
 
