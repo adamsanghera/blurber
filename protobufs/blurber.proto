@@ -6,7 +6,7 @@ service BlurbDB {
   rpc GenerateFeed (FeedParameters) returns (Blurbs);
   rpc GetRecentBy(UserID) returns (Blurbs);
   rpc DeleteHistoryOf(UserID) returns (Empty);
-  rpc InvalidateFeedCache(UserID) returns (Emptry);
+  rpc InvalidateFeedCache(UserID) returns (Empty);
 }
 
 message Empty{}
