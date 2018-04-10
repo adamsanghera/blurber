@@ -1,19 +1,13 @@
 syntax="proto3";
 
+import "common.proto";
+
 service UserDB {
   rpc Add (Credentials) returns (Error);
   rpc Delete (Username) returns (Error);
   rpc GetID (Username) returns (UserIDResult);
   rpc LogIn (Credentials) returns (LoginResult);
   rpc CheckIn (SessionCredentials) returns (LoginResult);
-}
-
-message UserID {
-  int32 UserID = 1;
-}
-
-message Error {
-  string Message = 1;
 }
 
 message Credentials {

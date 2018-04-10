@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+import "common.proto";
+
 service BlurbDB {
   rpc Delete (BlurbIndex) returns (Empty);
   rpc Add (NewBlurb) returns (Empty);
@@ -7,12 +9,6 @@ service BlurbDB {
   rpc GetRecentBy(UserID) returns (Blurbs);
   rpc DeleteHistoryOf(UserID) returns (Empty);
   rpc InvalidateFeedCache(UserID) returns (Empty);
-}
-
-message Empty{}
-
-message UserID {
-  int32 UserID = 1;
 }
 
 message FeedParameters {

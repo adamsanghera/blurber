@@ -1,2 +1,2 @@
 blurber
-protobufs/*.pb.go
+protobufs/dist/
