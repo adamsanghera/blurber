@@ -49,7 +49,8 @@ These will be managed in branches:
 
 ## How to run
 
-1. `PORT=4000 go run main.go` or `PORT=4000 DEBUG=1 go run main.go`
+1. `cd` your way into `./protobufs`, and run `./compile.sh`.
+1. `cd` to `./`, then run `PORT=4000 go run main.go` or `PORT=4000 DEBUG=1 go run main.go`
 1. `http://localhost:4000`
 
 ## In the Wild
