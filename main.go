@@ -18,6 +18,7 @@ func main() {
 	http.HandleFunc("/unsubscribe/", handler.Unsubscribe)
 	http.HandleFunc("/profile/", handler.Profile)
 	http.HandleFunc("/removeAcc/", handler.RemoveAcc)
+	http.HandleFunc("/logout/", handler.Logout)
 	http.HandleFunc("/", handler.Catcher)
 
 	http.ListenAndServe(":"+os.Getenv("PORT"), nil)

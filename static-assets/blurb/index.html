@@ -109,17 +109,20 @@
           Navigation Menu
         </div>
         <a href='/profile' class="menu-button">
-          Profile
+          My Profile
         </a>
         <a href='/feed' class="menu-button">
           Feed
         </a>
         <div class="menu-button">
-          <form action="/subscribe/" method='post' class='subscribe-box'>
-            <button type="submit">Subscribe</button>
+          <form action='/subscribe/' method='post' class='subscribe-box'>
+            <button>Subscribe</button>
             <input type="text" name="subscribe-leader" required="required">
           </form>
         </div>
+        <a href='/logout/' class="menu-button">
+          Log Out
+        </a>        
       </div>
     </div>
     <!-- END OF TITLE AND NAVBAR COMPONENT -->

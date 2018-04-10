@@ -115,6 +115,9 @@
         text-decoration: underline;
         color: rgb(157, 27, 27);
       }
+      .logout-form {
+        float: right;
+      }
     </style>
     <meta http-equiv="cache-control" content="no-cache"/>
   </head>
@@ -130,7 +133,7 @@
           Navigation Menu
         </div>
         <a href='/profile' class="menu-button">
-          Profile
+          My Profile
         </a>
         <a href='/feed' class="menu-button">
           Feed
@@ -141,13 +144,16 @@
             <input type="text" name="subscribe-leader" required="required">
           </form>
         </div>
+        <a href='/logout/' class="menu-button">
+          Log Out
+        </a>        
       </div>
     </div>
     <!-- END OF TITLE AND NAVBAR COMPONENT -->
 
     <div class="blurbs">
       <div class="blurbs-title">
-        Blurbs
+        Subscribed Blurbs
       </div>
       <div class="menu">
         <div class="menu-button">

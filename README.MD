@@ -56,3 +56,8 @@ These will be managed in branches:
 ## In the Wild
 
 This app can also be found deployed on heroku, at https://dist-blurber.herokuapp.com/
+
+## Team
+
+- Adam Sanghera (as8513)
+- Hieu Do (hsd258)
