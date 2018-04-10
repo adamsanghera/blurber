@@ -33,19 +33,19 @@
 
 These will be managed in branches:
 
-1. `protobufs`
+1. `protobufs` [] PR Closed
 
-2. `split`
+2. `split` [] PR Closed
 
-    - `split-blurb`
-    - `split-user`
-    - `split-subscription`
+    - `split-blurb` [] PR Closed
+    - `split-user` [] PR Closed
+    - `split-subscription` [] PR Closed
 
-3. `safe`
+3. `safe` [] PR Closed
 
-    - `safe-blurb`
-    - `safe-user`
-    - `safe-subscription`
+    - `safe-blurb` [] PR Closed
+    - `safe-user` [] PR Closed
+    - `safe-subscription` [] PR Closed
 
 ## How to run
 
