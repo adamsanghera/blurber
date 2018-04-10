@@ -1,13 +1,23 @@
 # Remove the dead weeds, if they exist
-rm -rf ./dist/*/* > /dev/null 2>&1
+rm -rf ./dist > /dev/null 2>&1
 
-# Make our path
+# Make our paths
 mkdir dist > /dev/null 2>&1
 mkdir dist/blurb > /dev/null 2>&1
 mkdir dist/user > /dev/null 2>&1
 mkdir dist/subscription > /dev/null 2>&1
+mkdir dist/common > /dev/null 2>&1
 
 # Complie the files
-protoc ./blurb.proto --go_out=plugins=grpc:./dist/blurb/
-protoc ./user.proto --go_out=plugins=grpc:./dist/user/
-protoc ./subscription.proto --go_out=plugins=grpc:./dist/subscription/
+
+protoc --go_out=plugins=grpc:$GOPATH/src \
+       ./common.proto
+
+protoc --go_out=plugins=grpc:$GOPATH/src/github.com/adamsanghera/blurber/protobufs/dist/blurb \
+       ./blurb.proto
+
+protoc --go_out=plugins=grpc:$GOPATH/src/github.com/adamsanghera/blurber/protobufs/dist/user \
+       ./user.proto
+
+protoc --go_out=plugins=grpc:$GOPATH/src/github.com/adamsanghera/blurber/protobufs/dist/subscription \
+       ./subscription.proto
