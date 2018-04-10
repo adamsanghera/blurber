@@ -33,7 +33,7 @@
 
 These will be managed in branches:
 
-1. `protobufs` []
+1. `protobufs` [X]
 
 2. `split` []
 
