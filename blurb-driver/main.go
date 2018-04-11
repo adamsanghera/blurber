@@ -17,9 +17,9 @@ func createListenAddr() string {
 	listenHost := os.Getenv("BLURB_HOST")
 	listenPort := os.Getenv("BLURB_PORT")
 
-	if listenHost == "" {
-		panic("No hostname set")
-	}
+	// if listenHost == "" {
+	// 	panic("No hostname set")
+	// }
 	if listenPort == "" {
 		panic("No port number set")
 	}
