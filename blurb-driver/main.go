@@ -14,7 +14,6 @@ import (
 )
 
 func createListenAddr() string {
-	listenHost := os.Getenv("BLURB_HOST")
 	listenPort := os.Getenv("BLURB_PORT")
 
 	// if listenHost == "" {
@@ -24,12 +23,7 @@ func createListenAddr() string {
 		panic("No port number set")
 	}
 
-	ret, err := net.LookupHost(listenHost)
-	if err != nil {
-		panic(err)
-	}
-
-	return ret[0] + ":" + listenPort
+	return ":" + listenPort
 }
 
 func main() {
