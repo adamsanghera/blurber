@@ -21,9 +21,9 @@
 
 - [ ] Split off backends to be behind a GRPC call:
 
-  - [ ] BlurbDB
+  - [X] BlurbDB
   - [ ] UserDB
-  - [ ] SubscriptionDB
+  - [X] SubscriptionDB
 
 - [ ] Ensure that backends are safe to concurrent access from multiple frontends
 
@@ -37,9 +37,9 @@ These will be managed in branches:
 
 2. `split` []
 
-    - `split-blurb` []
+    - `split-blurb` [X]
     - `split-user` []
-    - `split-subscription` []
+    - `split-subscription` [X]
 
 3. `safe` []
 
