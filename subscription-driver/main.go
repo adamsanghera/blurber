@@ -7,14 +7,14 @@ import (
 
 	"google.golang.org/grpc/reflection"
 
-	"github.com/adamsanghera/blurber/blurb"
-	blurbpb "github.com/adamsanghera/blurber/protobufs/dist/blurb"
+	subpb "github.com/adamsanghera/blurber/protobufs/dist/subscription"
+	"github.com/adamsanghera/blurber/subscription"
 
 	"google.golang.org/grpc"
 )
 
 func createListenAddr() string {
-	listenPort := os.Getenv("BLURB_PORT")
+	listenPort := os.Getenv("SUB_PORT")
 
 	// if listenHost == "" {
 	// 	panic("No hostname set")
@@ -29,9 +29,9 @@ func createListenAddr() string {
 func main() {
 	addr := createListenAddr()
 
-	log.Printf("BlurbServer: Derived address: (%s)", addr)
+	log.Printf("SubServer: Derived address: (%s)", addr)
 
-	srv := blurb.NewLedgerServer(addr)
+	srv := subscription.NewLedgerServer(addr)
 
 	lis, err := net.Listen("tcp", addr)
 	if err != nil {
@@ -39,9 +39,9 @@ func main() {
 	}
 
 	s := grpc.NewServer()
-	blurbpb.RegisterBlurbDBServer(s, srv)
+	subpb.RegisterSubscriptionDBServer(s, srv)
 
-	log.Printf("BlurbServer: Starting on (%s)", addr)
+	log.Printf("SubServer: Starting on (%s)", addr)
 
 	reflection.Register(s)
 	if err := s.Serve(lis); err != nil {

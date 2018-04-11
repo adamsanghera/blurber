@@ -6,6 +6,7 @@ import (
 	"os"
 
 	blurb "github.com/adamsanghera/blurber/protobufs/dist/blurb"
+	sub "github.com/adamsanghera/blurber/protobufs/dist/subscription"
 	"google.golang.org/grpc"
 )
 
@@ -31,16 +32,24 @@ func getAddress(envName string) string {
 func init() {
 	// Derive gRPC addresses
 	blurbAddr := getAddress("BLURB")
+	subAddr := getAddress("SUB")
 	log.Printf("Derived address for blurb db: (%s)", blurbAddr)
+	log.Printf("Derived address for sub db: (%s)", subAddr)
 
 	// Connect to gRPC addresses
-	conn, err := grpc.Dial(blurbAddr, grpc.WithInsecure())
+	connBlurb, err := grpc.Dial(blurbAddr, grpc.WithInsecure())
 	if err != nil {
 		log.Printf("Failed to connect to BlurbDB at %s", blurbAddr)
 	}
-	blurbDB = blurb.NewBlurbDBClient(conn)
-
+	blurbDB = blurb.NewBlurbDBClient(connBlurb)
 	log.Printf("Successfully created a connection to blurb db")
+
+	connSub, err := grpc.Dial(subAddr, grpc.WithInsecure())
+	if err != nil {
+		log.Printf("Failed to connect to SubDB at %s", subAddr)
+	}
+	subDB = sub.NewSubscriptionDBClient(connSub)
+	log.Printf("Successfully created a connection to sub db")
 
 	// Dev only
 	if os.Getenv("DEBUG") == "1" {

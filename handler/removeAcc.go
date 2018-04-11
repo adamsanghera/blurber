@@ -31,10 +31,11 @@ func RemoveAcc(w http.ResponseWriter, r *http.Request) {
 	}
 
 	userDB.Remove(username)
-	subDB.RemoveUser(usrID)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
+
+	subDB.DeletePresenceOf(ctx, &common.UserID{UserID: int32(usrID)})
 
 	_, err = blurbDB.DeleteHistoryOf(ctx, &common.UserID{UserID: int32(usrID)})
 	if err != nil {
