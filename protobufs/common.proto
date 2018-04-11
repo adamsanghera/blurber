@@ -1,5 +1,7 @@
 syntax="proto3";
 
+option go_package = "github.com/adamsanghera/blurber/protobufs/dist/common";
+
 message Empty{}
 
 message UserID {

@@ -33,7 +33,7 @@
 
 These will be managed in branches:
 
-1. `protobufs` []
+1. `protobufs` [X]
 
 2. `split` []
 
@@ -50,8 +50,9 @@ These will be managed in branches:
 ## How to run
 
 1. `cd` your way into `./protobufs`, and run `./compile.sh`.
-1. `cd` to `./`, then run `PORT=4000 go run main.go` or `PORT=4000 DEBUG=1 go run main.go`
-1. `http://localhost:4000`
+1. `cd` your way into `./blurb-driver` and run `./run.sh`.
+1. `cd` your way into `./` and run `.run.sh` 
+1. Point your favorite browser @ `http://localhost:4000`
 
 ## In the Wild
 

@@ -1,9 +1,12 @@
 package handler
 
 import (
+	"context"
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/adamsanghera/blurber/protobufs/dist/common"
 )
 
 func Subscribe(w http.ResponseWriter, r *http.Request) {
@@ -51,7 +54,14 @@ func Subscribe(w http.ResponseWriter, r *http.Request) {
 
 	// Submit subscription request to ledger
 	subDB.AddSub(uid, lid)
-	blurbDB.InvalidateCache(uid)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	_, err = blurbDB.InvalidateFeedCache(ctx, &common.UserID{UserID: int32(uid)})
+	if err != nil {
+		panic(err)
+	}
 
 	// Redirect to feed
 	http.Redirect(w, r, "/feed/", http.StatusFound)
@@ -73,7 +83,7 @@ func Unsubscribe(w http.ResponseWriter, r *http.Request) {
 
 	// Only posts allowed
 	if r.Method != "POST" {
-		log.Printf("whoops %v",r.Method)
+		log.Printf("whoops %v", r.Method)
 		return
 	}
 
@@ -90,8 +100,15 @@ func Unsubscribe(w http.ResponseWriter, r *http.Request) {
 
 	// Send unsubscription request to ledger
 	subDB.RemoveSub(uid, lid)
-	blurbDB.InvalidateCache(uid)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	_, err = blurbDB.InvalidateFeedCache(ctx, &common.UserID{UserID: int32(uid)})
+	if err != nil {
+		panic(err)
+	}
 
 	// Redirect to feed
-	http.Redirect(w, r, "/feed/", http.StatusFound)	
+	http.Redirect(w, r, "/feed/", http.StatusFound)
 }
