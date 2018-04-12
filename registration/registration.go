@@ -16,6 +16,7 @@ type Ledger interface {
 	LogIn(uname string, pwd string) (error, string) // returns a token
 	LogOut(uname string, pwd string) error
 	CheckIn(uname string, token string) (error, string) // returns a token
+	CheckOut(uname string, token string) error
 }
 
 type Token struct {

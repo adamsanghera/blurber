@@ -1,9 +1,12 @@
 package handler
 
 import (
+	"context"
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/adamsanghera/blurber/protobufs/dist/user"
 )
 
 func validateSession(w http.ResponseWriter, r *http.Request) (bool, string) {
@@ -30,8 +33,13 @@ func validateSession(w http.ResponseWriter, r *http.Request) (bool, string) {
 		return false, ""
 	}
 
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
 	// Make sure that the token matches the username
-	token, err := userDB.CheckIn(cookieUsername.Value, cookieToken.Value)
+	token, err := userDB.CheckIn(ctx, &user.SessionCredentials{
+		Username: cookieUsername.Value,
+		Token:    cookieToken.Value})
 	if err != nil {
 		http.Redirect(w, r, "/login/expired/", http.StatusFound)
 		log.Printf("HANDLERS-VALIDATE: Failed & Redirected")
@@ -41,7 +49,7 @@ func validateSession(w http.ResponseWriter, r *http.Request) (bool, string) {
 	// Set the token to be the new value
 	http.SetCookie(w, &http.Cookie{
 		Name:    "token",
-		Value:   token,
+		Value:   token.Token,
 		Expires: time.Now().Add(365 * 24 * time.Hour),
 		Path:    "/",
 	})

@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/adamsanghera/blurber/protobufs/dist/blurb"
-	"github.com/adamsanghera/blurber/protobufs/dist/common"
+	"github.com/adamsanghera/blurber/protobufs/dist/user"
 )
 
 // Profile is the handler for /profile/ requests
@@ -33,16 +33,17 @@ func Profile(w http.ResponseWriter, req *http.Request) {
 	}
 
 	// Get the UID, so that we can retrieve this user's blurb
-	uid, err := userDB.GetUserID(username)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	// Retrieve uid
+	uid, err := userDB.GetID(ctx, &user.Username{Username: username})
 	if err != nil {
 		w.Write([]byte("Something went very wrong"))
 	}
 
 	// Obtain and sort blurb
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	blurbs, err := blurbDB.GetRecentBy(ctx, &common.UserID{UserID: int32(uid)})
+	blurbs, err := blurbDB.GetRecentBy(ctx, uid)
 	if err != nil {
 		panic(err)
 	}

@@ -43,3 +43,8 @@ func (ls *LedgerServer) CheckIn(ctx context.Context, in *userpb.SessionCredentia
 	token, err := ls.ledger.CheckIn(in.Username, in.Token)
 	return &userpb.Token{Token: token}, err
 }
+
+func (ls *LedgerServer) CheckOut(ctx context.Context, in *userpb.SessionCredentials) (*common.Empty, error) {
+	err := ls.ledger.CheckOut(in.Username, in.Token)
+	return &common.Empty{}, err
+}

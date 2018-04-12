@@ -1,10 +1,13 @@
 package handler
 
 import (
+	"context"
 	"html/template"
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/adamsanghera/blurber/protobufs/dist/user"
 )
 
 func Auth(w http.ResponseWriter, r *http.Request) {
@@ -55,7 +58,10 @@ func Auth(w http.ResponseWriter, r *http.Request) {
 			username = r.Form.Get("reg-user")
 			password = r.Form.Get("reg-pass")
 
-			err := userDB.AddNewUser(username, password)
+			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+			defer cancel()
+
+			_, err := userDB.Add(ctx, &user.Credentials{Username: username, Password: password})
 
 			if err != nil {
 				t, tempErr := template.ParseFiles("./static-assets/login/index.html")
@@ -72,8 +78,10 @@ func Auth(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Actually log the user in
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
 
-		token, err := userDB.LogIn(username, password)
+		token, err := userDB.LogIn(ctx, &user.Credentials{Username: username, Password: password})
 		if err != nil {
 			t, tempErr := template.ParseFiles("./static-assets/login/index.html")
 			if tempErr != nil {
@@ -87,7 +95,7 @@ func Auth(w http.ResponseWriter, r *http.Request) {
 		// New cookies for token and username
 		tokCook := &http.Cookie{
 			Name:    "token",
-			Value:   token,
+			Value:   token.Token,
 			Expires: time.Now().Add(24 * time.Hour),
 			Path:    "/",
 		}
