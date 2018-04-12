@@ -20,21 +20,21 @@ func NewLedgerServer(addr string) *LedgerServer {
 }
 
 func (ls *LedgerServer) Add(c context.Context, b *blurb.NewBlurb) (*common.Empty, error) {
-	ls.ledger.AddNewBlurb(int(b.Author.UserID), b.Content, b.Username)
+	ls.ledger.AddNewBlurb(b.Author.UserID, b.Content, b.Username)
 	return &common.Empty{}, nil
 }
 
 func (ls *LedgerServer) Delete(c context.Context, bi *blurb.BlurbIndex) (*common.Empty, error) {
-	ls.ledger.RemoveBlurb(int(bi.Author.UserID), int(bi.BlurbID))
+	ls.ledger.RemoveBlurb(bi.Author.UserID, bi.BlurbID)
 	return &common.Empty{}, nil
 }
 
 func (ls *LedgerServer) GenerateFeed(c context.Context, fp *blurb.FeedParameters) (*blurb.Blurbs, error) {
-	leaders := make([]int, len(fp.LeaderIDs))
+	leaders := make([]int32, len(fp.LeaderIDs))
 	for k, v := range fp.LeaderIDs {
-		leaders[k] = int(v.UserID)
+		leaders[k] = v.UserID
 	}
-	blurbs := ls.ledger.GenerateFeed(int(fp.RequestorID.UserID), leaders)
+	blurbs := ls.ledger.GenerateFeed(fp.RequestorID.UserID, leaders)
 
 	ret := make([]*blurb.Blurb, len(blurbs))
 
@@ -53,7 +53,7 @@ func (ls *LedgerServer) GenerateFeed(c context.Context, fp *blurb.FeedParameters
 }
 
 func (ls *LedgerServer) GetRecentBy(c context.Context, uid *common.UserID) (*blurb.Blurbs, error) {
-	blurbs := ls.ledger.GetRecentBlurbsBy(int(uid.UserID))
+	blurbs := ls.ledger.GetRecentBlurbsBy(uid.UserID)
 
 	ret := make([]*blurb.Blurb, len(blurbs))
 
@@ -73,11 +73,11 @@ func (ls *LedgerServer) GetRecentBy(c context.Context, uid *common.UserID) (*blu
 }
 
 func (ls *LedgerServer) DeleteHistoryOf(c context.Context, uid *common.UserID) (*common.Empty, error) {
-	ls.ledger.RemoveAllBlurbsBy(int(uid.UserID))
+	ls.ledger.RemoveAllBlurbsBy(uid.UserID)
 	return &common.Empty{}, nil
 }
 
 func (ls *LedgerServer) InvalidateFeedCache(c context.Context, uid *common.UserID) (*common.Empty, error) {
-	ls.ledger.InvalidateCache(int(uid.UserID))
+	ls.ledger.InvalidateCache(uid.UserID)
 	return &common.Empty{}, nil
 }

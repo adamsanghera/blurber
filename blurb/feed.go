@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-func (ll *LocalLedger) GenerateFeed(readerID int, sources []int) []Blurb {
+func (ll *LocalLedger) GenerateFeed(readerID int32, sources []int32) []Blurb {
 	log.Printf("BLURB-LEDGER: Generating a feed for %d", readerID)
 
 	// Hit cache, if it exists and is fresh
@@ -47,7 +47,7 @@ func (ll *LocalLedger) GenerateFeed(readerID int, sources []int) []Blurb {
 }
 
 // InvalidateCache wipes the cache for the given user.
-func (ll *LocalLedger) InvalidateCache(readerID int) {
+func (ll *LocalLedger) InvalidateCache(readerID int32) {
 	log.Printf("BLURB-LEDGER: Invalidating cache for %d", readerID)
 	delete(ll.feedCache, readerID)
 }

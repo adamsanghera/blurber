@@ -7,7 +7,7 @@ import (
 
 // AddNewBlurb consumes metadata to produce a new blurb object,
 // and stores that Blurb object in-memory.
-func (ll *LocalLedger) AddNewBlurb(creatorID int, content string, creatorName string) {
+func (ll *LocalLedger) AddNewBlurb(creatorID int32, content string, creatorName string) {
 	log.Printf("BLURB-LEDGER: Adding a new blurb %d, created by %s", ll.bidCounter, creatorName)
 
 	freshBID := ll.measureBID()

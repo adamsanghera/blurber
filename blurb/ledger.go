@@ -22,25 +22,25 @@ type FeedCache struct {
 // of in-memory data structures to record blurbs
 type LocalLedger struct {
 	// Map from UID -> map [BID] -> Blurb
-	bidCounter int
+	bidCounter int32
 	bidMutex   sync.Mutex
 
-	ledger    map[int]*BlurbBox
-	feedCache map[int]FeedCache
+	ledger    map[int32]*BlurbBox
+	feedCache map[int32]FeedCache
 }
 
 // NewLocalLedger returns a new and initialized LocalLedger
 func NewLocalLedger() *LocalLedger {
 	log.Printf("BLURB-LEDGER: Initializing")
 	return &LocalLedger{
-		ledger:     make(map[int]*BlurbBox),
-		feedCache:  make(map[int]FeedCache),
+		ledger:     make(map[int32]*BlurbBox),
+		feedCache:  make(map[int32]FeedCache),
 		bidCounter: 0,
 		bidMutex:   sync.Mutex{},
 	}
 }
 
-func (ll *LocalLedger) measureBID() int {
+func (ll *LocalLedger) measureBID() int32 {
 	ll.bidMutex.Lock()
 
 	ret := ll.bidCounter
