@@ -1,4 +1,4 @@
-# Blurber 
+# Blurber
 
 ## Main features
 
@@ -9,7 +9,7 @@
 - [x] Unsubscribe on feed
 - [x] Simple profile page
 - [x] Delete personal single blurbs
-- [ ] Feed: show all blurbs ('Discover') vs. just subscription
+- [ ] OPTIONAL: Feed option to show all blurbs ('Discover' page) vs. just subscription
 
 ## Roadmap for detaching backend
 
@@ -19,10 +19,10 @@
   - [X] UserDB
   - [X] SubscriptionDB
 
-- [ ] Split off backends to be behind a GRPC call:
+- [x] Split off backends to be behind a GRPC call:
 
   - [X] BlurbDB
-  - [ ] UserDB
+  - [x] UserDB
   - [X] SubscriptionDB
 
 - [ ] Ensure that backends are safe to concurrent access from multiple frontends
@@ -35,10 +35,10 @@ These will be managed in branches:
 
 1. `protobufs` [X]
 
-2. `split` []
+2. `split` [x]
 
     - `split-blurb` [X]
-    - `split-user` []
+    - `split-user` [x]
     - `split-subscription` [X]
 
 3. `safe` []
