@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/adamsanghera/blurber/protobufs/dist/common"
+	"github.com/adamsanghera/blurber/protobufs/dist/user"
 )
 
 func RemoveAcc(w http.ResponseWriter, r *http.Request) {
@@ -23,21 +23,21 @@ func RemoveAcc(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Retrieve UID
-	usrID, err := userDB.GetUserID(username)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	// Retrieve uid
+	usrID, err := userDB.GetID(ctx, &user.Username{Username: username})
 	if err != nil {
 		w.Write([]byte("Something went very wrong\n\tError Message: " + err.Error()))
 		return
 	}
 
-	userDB.Remove(username)
+	userDB.Delete(ctx, &user.Username{Username: username})
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
+	subDB.DeletePresenceOf(ctx, usrID)
 
-	subDB.DeletePresenceOf(ctx, &common.UserID{UserID: int32(usrID)})
-
-	_, err = blurbDB.DeleteHistoryOf(ctx, &common.UserID{UserID: int32(usrID)})
+	_, err = blurbDB.DeleteHistoryOf(ctx, usrID)
 	if err != nil {
 		panic(err)
 	}

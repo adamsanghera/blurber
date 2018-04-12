@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/adamsanghera/blurber/protobufs/dist/common"
 	sub "github.com/adamsanghera/blurber/protobufs/dist/subscription"
+	"github.com/adamsanghera/blurber/protobufs/dist/user"
 )
 
 func Subscribe(w http.ResponseWriter, r *http.Request) {
@@ -38,8 +38,13 @@ func Subscribe(w http.ResponseWriter, r *http.Request) {
 
 	// Obtain all variables
 	leaderName := r.Form.Get("subscribe-leader")
-	uid, err := userDB.GetUserID(uname)
-	lid, lErr := userDB.GetUserID(leaderName)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	// Retrieve uid
+	uid, err := userDB.GetID(ctx, &user.Username{Username: uname})
+	lid, lErr := userDB.GetID(ctx, &user.Username{Username: leaderName})
 
 	// Verify leader exists
 	if lErr != nil {
@@ -53,20 +58,17 @@ func Subscribe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
 	// Submit subscription request to ledger
 	_, err = subDB.Add(ctx, &sub.Subscription{
-		Follower: &common.UserID{UserID: int32(uid)},
-		Leader:   &common.UserID{UserID: int32(lid)},
+		Follower: uid,
+		Leader:   lid,
 	})
 
 	if err != nil {
 		panic(err)
 	}
 
-	_, err = blurbDB.InvalidateFeedCache(ctx, &common.UserID{UserID: int32(uid)})
+	_, err = blurbDB.InvalidateFeedCache(ctx, uid)
 	if err != nil {
 		panic(err)
 	}
@@ -103,18 +105,20 @@ func Unsubscribe(w http.ResponseWriter, r *http.Request) {
 
 	// Obtain all variables
 	leaderName := r.Form.Get("blurber")
-	uid, _ := userDB.GetUserID(uname)
-	lid, _ := userDB.GetUserID(leaderName)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
+	// Retrieve uid
+	uid, _ := userDB.GetID(ctx, &user.Username{Username: uname})
+	lid, _ := userDB.GetID(ctx, &user.Username{Username: leaderName})
+
 	subDB.Delete(ctx, &sub.Subscription{
-		Follower: &common.UserID{UserID: int32(uid)},
-		Leader:   &common.UserID{UserID: int32(lid)},
+		Follower: uid,
+		Leader:   lid,
 	})
 
-	_, err = blurbDB.InvalidateFeedCache(ctx, &common.UserID{UserID: int32(uid)})
+	_, err = blurbDB.InvalidateFeedCache(ctx, uid)
 	if err != nil {
 		panic(err)
 	}

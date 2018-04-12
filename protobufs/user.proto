@@ -8,6 +8,7 @@ service UserDB {
   rpc GetID (Username) returns (UserID);
   rpc LogIn (Credentials) returns (Token);
   rpc CheckIn (SessionCredentials) returns (Token);
+  rpc CheckOut(SessionCredentials) returns (Empty);
 }
 
 message Credentials {

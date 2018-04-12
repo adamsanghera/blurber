@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/adamsanghera/blurber/protobufs/dist/blurb"
-	"github.com/adamsanghera/blurber/protobufs/dist/common"
+	"github.com/adamsanghera/blurber/protobufs/dist/user"
 )
 
 func Feed(w http.ResponseWriter, r *http.Request) {
@@ -32,17 +32,17 @@ func Feed(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get our UID
-	uid, err := userDB.GetUserID(uname)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	uid, err := userDB.GetID(ctx, &user.Username{Username: uname})
 	if err != nil {
 		w.Write([]byte("Something went very wrong"))
 		panic(err)
 	}
 
 	// Get the leader map for UID
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	leaderSet, err := subDB.GetLeadersOf(ctx, &common.UserID{UserID: int32(uid)})
+	leaderSet, err := subDB.GetLeadersOf(ctx, uid)
 	if err != nil {
 		w.Write([]byte("Something went very wrong"))
 		panic(err)
@@ -53,7 +53,7 @@ func Feed(w http.ResponseWriter, r *http.Request) {
 
 	// Generate the feed
 	bs, err := blurbDB.GenerateFeed(ctx, &blurb.FeedParameters{
-		RequestorID: &common.UserID{UserID: int32(uid)},
+		RequestorID: uid,
 		LeaderIDs:   leaderSet.Leaders,
 	})
 

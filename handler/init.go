@@ -7,6 +7,7 @@ import (
 
 	blurb "github.com/adamsanghera/blurber/protobufs/dist/blurb"
 	sub "github.com/adamsanghera/blurber/protobufs/dist/subscription"
+	user "github.com/adamsanghera/blurber/protobufs/dist/user"
 	"google.golang.org/grpc"
 )
 
@@ -33,8 +34,10 @@ func init() {
 	// Derive gRPC addresses
 	blurbAddr := getAddress("BLURB")
 	subAddr := getAddress("SUB")
+	userAddr := getAddress("REGISTRATION")
 	log.Printf("Derived address for blurb db: (%s)", blurbAddr)
 	log.Printf("Derived address for sub db: (%s)", subAddr)
+	log.Printf("Derived address for user db: (%s)", userAddr)
 
 	// Connect to gRPC addresses
 	connBlurb, err := grpc.Dial(blurbAddr, grpc.WithInsecure())
@@ -51,11 +54,18 @@ func init() {
 	subDB = sub.NewSubscriptionDBClient(connSub)
 	log.Printf("Successfully created a connection to sub db")
 
+	userSub, err := grpc.Dial(userAddr, grpc.WithInsecure())
+	if err != nil {
+		log.Printf("Failed to connect to UserDB at %s", userAddr)
+	}
+	userDB = user.NewUserDBClient(userSub)
+	log.Printf("Successfully created a connection to user db")
+
 	// Dev only
 	if os.Getenv("DEBUG") == "1" {
-		userDB.AddNewUser("dev", "root")
-		userDB.AddNewUser("adam", "root")
-		userDB.AddNewUser("hieu", "root")
+		// userDB.AddNewUser("dev", "root")
+		// userDB.AddNewUser("adam", "root")
+		// userDB.AddNewUser("hieu", "root")
 
 		// blurbDB.AddNewBlurb(0, "hello", "dev")
 		// blurbDB.AddNewBlurb(1, "world", "adam")
