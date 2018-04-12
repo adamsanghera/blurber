@@ -3,11 +3,11 @@ syntax="proto3";
 import "common.proto";
 
 service UserDB {
-  rpc Add (Credentials) returns (Error);
-  rpc Delete (Username) returns (Error);
-  rpc GetID (Username) returns (UserIDResult);
-  rpc LogIn (Credentials) returns (LoginResult);
-  rpc CheckIn (SessionCredentials) returns (LoginResult);
+  rpc Add (Credentials) returns (Empty);
+  rpc Delete (Username) returns (Empty);
+  rpc GetID (Username) returns (UserID);
+  rpc LogIn (Credentials) returns (Token);
+  rpc CheckIn (SessionCredentials) returns (Token);
 }
 
 message Credentials {
@@ -15,14 +15,8 @@ message Credentials {
   string Password = 2;
 }
 
-message LoginResult {
+message Token {
   string Token = 1;
-  Error Error = 2;
-}
-
-message UserIDResult {
-  UserID UserID = 1;
-  Error Error = 2;
 }
 
 message SessionCredentials {
