@@ -26,22 +26,22 @@ type Token struct {
 // LocalLedger is an implementation of Ledger, which uses in-memory data
 // structures to support Ledger's functionality.
 type LocalLedger struct {
-	userSet  map[int]user
-	userID   map[string]int
-	pwdMap   map[int]string
-	tokenMap map[int]Token
+	userSet  map[int32]user
+	userID   map[string]int32
+	pwdMap   map[int32]string
+	tokenMap map[int32]Token
 
-	uidCounter int
+	uidCounter int32
 }
 
 // NewLocalLedger initializes and returns a new LocalLedger instance.
 func NewLocalLedger() *LocalLedger {
 	log.Printf("AUTH-LEDGER: Initializing")
 	return &LocalLedger{
-		userSet:    make(map[int]user),
-		userID:     make(map[string]int),
-		pwdMap:     make(map[int]string),
-		tokenMap:   make(map[int]Token),
+		userSet:    make(map[int32]user),
+		userID:     make(map[string]int32),
+		pwdMap:     make(map[int32]string),
+		tokenMap:   make(map[int32]Token),
 		uidCounter: 0,
 	}
 }
@@ -90,7 +90,7 @@ func (lul *LocalLedger) LogIn(uname string, pwd string) (string, error) {
 	return lul.allocateNewToken(id), nil
 }
 
-func (lul *LocalLedger) allocateNewToken(uid int) string {
+func (lul *LocalLedger) allocateNewToken(uid int32) string {
 	// Generate a random token of fixed-length
 	bitString := make([]byte, 256)
 	_, err := rand.Read(bitString)
@@ -129,7 +129,7 @@ func (lul *LocalLedger) CheckIn(uname string, token string) (string, error) {
 	return lul.allocateNewToken(id), nil
 }
 
-func (lul *LocalLedger) CheckOut(uname string, token string) (error) {
+func (lul *LocalLedger) CheckOut(uname string, token string) error {
 	log.Printf("AUTH-LEDGER: Checking-out %s", uname)
 
 	// username-check
@@ -142,14 +142,14 @@ func (lul *LocalLedger) CheckOut(uname string, token string) (error) {
 	if lul.tokenMap[id].token != token {
 		return errors.New("Bad token for " + uname)
 	}
-	
+
 	delete(lul.tokenMap, id)
 
 	return nil
 }
 
 // GetUserID retrieves the permanent UID associated with uname.
-func (lul *LocalLedger) GetUserID(uname string) (int, error) {
+func (lul *LocalLedger) GetUserID(uname string) (int32, error) {
 	log.Printf("AUTH-LEDGER: Retrieving UID for %s", uname)
 
 	id, ok := lul.userID[uname]
