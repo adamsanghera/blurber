@@ -1,9 +1,13 @@
 package handler
 
 import (
+	"context"
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/adamsanghera/blurber/protobufs/dist/common"
+	sub "github.com/adamsanghera/blurber/protobufs/dist/subscription"
 )
 
 func Subscribe(w http.ResponseWriter, r *http.Request) {
@@ -49,9 +53,23 @@ func Subscribe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
 	// Submit subscription request to ledger
-	subDB.AddSub(uid, lid)
-	blurbDB.InvalidateCache(uid)
+	_, err = subDB.Add(ctx, &sub.Subscription{
+		Follower: &common.UserID{UserID: int32(uid)},
+		Leader:   &common.UserID{UserID: int32(lid)},
+	})
+
+	if err != nil {
+		panic(err)
+	}
+
+	_, err = blurbDB.InvalidateFeedCache(ctx, &common.UserID{UserID: int32(uid)})
+	if err != nil {
+		panic(err)
+	}
 
 	// Redirect to feed
 	http.Redirect(w, r, "/feed/", http.StatusFound)
@@ -73,7 +91,7 @@ func Unsubscribe(w http.ResponseWriter, r *http.Request) {
 
 	// Only posts allowed
 	if r.Method != "POST" {
-		log.Printf("whoops %v",r.Method)
+		log.Printf("whoops %v", r.Method)
 		return
 	}
 
@@ -88,10 +106,19 @@ func Unsubscribe(w http.ResponseWriter, r *http.Request) {
 	uid, _ := userDB.GetUserID(uname)
 	lid, _ := userDB.GetUserID(leaderName)
 
-	// Send unsubscription request to ledger
-	subDB.RemoveSub(uid, lid)
-	blurbDB.InvalidateCache(uid)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	subDB.Delete(ctx, &sub.Subscription{
+		Follower: &common.UserID{UserID: int32(uid)},
+		Leader:   &common.UserID{UserID: int32(lid)},
+	})
+
+	_, err = blurbDB.InvalidateFeedCache(ctx, &common.UserID{UserID: int32(uid)})
+	if err != nil {
+		panic(err)
+	}
 
 	// Redirect to feed
-	http.Redirect(w, r, "/feed/", http.StatusFound)	
+	http.Redirect(w, r, "/feed/", http.StatusFound)
 }

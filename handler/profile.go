@@ -1,12 +1,14 @@
 package handler
 
 import (
+	"context"
 	"html/template"
 	"log"
 	"net/http"
 	"time"
 
-	"github.com/adamsanghera/blurber/blurb"
+	"github.com/adamsanghera/blurber/protobufs/dist/blurb"
+	"github.com/adamsanghera/blurber/protobufs/dist/common"
 )
 
 // Profile is the handler for /profile/ requests
@@ -37,19 +39,25 @@ func Profile(w http.ResponseWriter, req *http.Request) {
 	}
 
 	// Obtain and sort blurb
-	blurbs := blurbDB.GetRecentBlurbsBy(uid)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	blurbs, err := blurbDB.GetRecentBy(ctx, &common.UserID{UserID: int32(uid)})
+	if err != nil {
+		panic(err)
+	}
 
 	// Create a data packet to send back
 	data := struct {
 		Name     string
 		Bio      string
 		Username string
-		Blurbs   []blurb.Blurb
+		Blurbs   []*blurb.Blurb
 	}{
 		"<No name yet>",
 		"<No bio yet>",
 		username,
-		blurbs,
+		blurbs.Blurbs,
 	}
 
 	t.Execute(w, data)

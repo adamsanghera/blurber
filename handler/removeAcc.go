@@ -1,9 +1,12 @@
 package handler
 
 import (
+	"context"
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/adamsanghera/blurber/protobufs/dist/common"
 )
 
 func RemoveAcc(w http.ResponseWriter, r *http.Request) {
@@ -28,8 +31,16 @@ func RemoveAcc(w http.ResponseWriter, r *http.Request) {
 	}
 
 	userDB.Remove(username)
-	subDB.RemoveUser(usrID)
-	blurbDB.RemoveAllBlurbsBy(usrID)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	subDB.DeletePresenceOf(ctx, &common.UserID{UserID: int32(usrID)})
+
+	_, err = blurbDB.DeleteHistoryOf(ctx, &common.UserID{UserID: int32(usrID)})
+	if err != nil {
+		panic(err)
+	}
 
 	http.Redirect(w, r, "/login/", http.StatusFound)
 }

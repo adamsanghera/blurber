@@ -6,14 +6,14 @@ import (
 )
 
 type BlurbBox struct {
-	Box         map[int]Blurb
+	Box         map[int32]Blurb
 	SortedCache []Blurb
 	BoxLock     sync.Mutex
 }
 
 func NewBlurbBox() *BlurbBox {
 	return &BlurbBox{
-		Box:         make(map[int]Blurb),
+		Box:         make(map[int32]Blurb),
 		BoxLock:     sync.Mutex{},
 		SortedCache: make([]Blurb, 0),
 	}
@@ -34,7 +34,7 @@ func (bb *BlurbBox) insert(b Blurb) {
 	log.Printf("Sorted cache:\n %v", bb.SortedCache)
 }
 
-func (bb *BlurbBox) delete(bid int) {
+func (bb *BlurbBox) delete(bid int32) {
 	bb.BoxLock.Lock()
 	defer bb.BoxLock.Unlock()
 
