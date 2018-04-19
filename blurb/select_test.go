@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strconv"
 	"testing"
+	"time"
 )
 
 func TestLocalLedger_GetBlurbsCreatedBy(t *testing.T) {
@@ -67,7 +68,9 @@ func TestLocalLedger_GetRecentBlurbsBy(t *testing.T) {
 
 			for idx := range recentBlurbs {
 				if idx > 1 {
-					if recentBlurbs[idx].Time.After(recentBlurbs[idx-1].Time) {
+					iTime := time.Unix(recentBlurbs[idx].UnixTime, 0)
+					jTime := time.Unix(recentBlurbs[idx-1].UnixTime, 0)
+					if iTime.After(jTime) {
 						t.Errorf("GetRecentBlurbsBy returned a list that is out of order: {%s} is placed before {%s}", recentBlurbs[idx-1].Timestamp, recentBlurbs[idx].Timestamp)
 					}
 				}

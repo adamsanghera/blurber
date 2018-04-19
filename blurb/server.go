@@ -40,11 +40,11 @@ func (ls *LedgerServer) GenerateFeed(c context.Context, fp *blurb.FeedParameters
 
 	for k, v := range blurbs {
 		ret[k] = &blurb.Blurb{
-			BlurbID:     int32(v.BID),
+			BlurbID:     v.BlurbID,
 			Content:     v.Content,
 			CreatorName: v.CreatorName,
 			Timestamp:   v.Timestamp,
-			UnixTime:    v.Time.Unix(),
+			UnixTime:    v.UnixTime,
 		}
 	}
 	return &blurb.Blurbs{
@@ -59,11 +59,11 @@ func (ls *LedgerServer) GetRecentBy(c context.Context, uid *common.UserID) (*blu
 
 	for k, v := range blurbs {
 		ret[k] = &blurb.Blurb{
-			BlurbID:     int32(v.BID),
+			BlurbID:     v.BlurbID,
 			Content:     v.Content,
 			CreatorName: v.CreatorName,
 			Timestamp:   v.Timestamp,
-			UnixTime:    v.Time.Unix(),
+			UnixTime:    v.UnixTime,
 		}
 	}
 
