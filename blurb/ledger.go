@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/adamsanghera/blurber/protobufs/dist/blurb"
+	"github.com/adamsanghera/blurber-protobufs/dist/blurb"
 )
 
 // Ledger is the interface for a service that maintains

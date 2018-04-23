@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/adamsanghera/blurber/protobufs/dist/user"
+	"github.com/adamsanghera/blurber-protobufs/dist/user"
 )
 
 func Auth(w http.ResponseWriter, r *http.Request) {

@@ -3,8 +3,8 @@ package blurb
 import (
 	"golang.org/x/net/context"
 
-	"github.com/adamsanghera/blurber/protobufs/dist/blurb"
-	"github.com/adamsanghera/blurber/protobufs/dist/common"
+	"github.com/adamsanghera/blurber-protobufs/dist/blurb"
+	"github.com/adamsanghera/blurber-protobufs/dist/common"
 )
 
 type LedgerServer struct {

@@ -3,8 +3,8 @@ package registration
 import (
 	"golang.org/x/net/context"
 
-	"github.com/adamsanghera/blurber/protobufs/dist/common"
-	userpb "github.com/adamsanghera/blurber/protobufs/dist/user"
+	"github.com/adamsanghera/blurber-protobufs/dist/common"
+	userpb "github.com/adamsanghera/blurber-protobufs/dist/user"
 )
 
 type LedgerServer struct {

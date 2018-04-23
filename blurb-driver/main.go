@@ -7,8 +7,8 @@ import (
 
 	"google.golang.org/grpc/reflection"
 
+	blurbpb "github.com/adamsanghera/blurber-protobufs/dist/blurb"
 	"github.com/adamsanghera/blurber/blurb"
-	blurbpb "github.com/adamsanghera/blurber/protobufs/dist/blurb"
 
 	"google.golang.org/grpc"
 )

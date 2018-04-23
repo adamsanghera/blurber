@@ -3,8 +3,8 @@ package subscription
 import (
 	"golang.org/x/net/context"
 
-	"github.com/adamsanghera/blurber/protobufs/dist/common"
-	subpb "github.com/adamsanghera/blurber/protobufs/dist/subscription"
+	"github.com/adamsanghera/blurber-protobufs/dist/common"
+	subpb "github.com/adamsanghera/blurber-protobufs/dist/subscription"
 )
 
 type LedgerServer struct {
