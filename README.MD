@@ -47,6 +47,14 @@ These will be managed in branches:
     - `safe-user` [X]
     - `safe-subscription` [X]
 
+## Roadmap for replication
+
+- [ ] Create a general package for replicating a log with the RAFT protocol
+
+  - [ ] Leader election
+  - [ ] Command intake
+  - [ ] Log replication
+
 ## How to run
 
 1. `cd` your way into `./protobufs`, and exec `./compile.sh`.
