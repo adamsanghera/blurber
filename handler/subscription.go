@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"time"
 
-	sub "github.com/adamsanghera/blurber/protobufs/dist/subscription"
-	"github.com/adamsanghera/blurber/protobufs/dist/user"
+	sub "github.com/adamsanghera/blurber-protobufs/dist/subscription"
+	"github.com/adamsanghera/blurber-protobufs/dist/user"
 )
 
 func Subscribe(w http.ResponseWriter, r *http.Request) {

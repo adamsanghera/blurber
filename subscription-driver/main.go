@@ -7,7 +7,7 @@ import (
 
 	"google.golang.org/grpc/reflection"
 
-	subpb "github.com/adamsanghera/blurber/protobufs/dist/subscription"
+	subpb "github.com/adamsanghera/blurber-protobufs/dist/subscription"
 	"github.com/adamsanghera/blurber/subscription"
 
 	"google.golang.org/grpc"

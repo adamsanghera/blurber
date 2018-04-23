@@ -3,7 +3,7 @@ package blurb
 import (
 	"log"
 
-	"github.com/adamsanghera/blurber/protobufs/dist/blurb"
+	"github.com/adamsanghera/blurber-protobufs/dist/blurb"
 )
 
 // GetBlurbsCreatedBy returns all blurbs created by a given user.

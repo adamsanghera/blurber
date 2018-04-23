@@ -6,7 +6,7 @@ import (
 	"sort"
 	"time"
 
-	"github.com/adamsanghera/blurber/protobufs/dist/blurb"
+	"github.com/adamsanghera/blurber-protobufs/dist/blurb"
 )
 
 func (ll *LocalLedger) GenerateFeed(readerID int32, sources []int32) []blurb.Blurb {

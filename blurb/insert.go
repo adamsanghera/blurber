@@ -4,7 +4,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/adamsanghera/blurber/protobufs/dist/blurb"
+	"github.com/adamsanghera/blurber-protobufs/dist/blurb"
 )
 
 // AddNewBlurb consumes metadata to produce a new blurb object,
