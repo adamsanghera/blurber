@@ -4,7 +4,7 @@ import (
 	"log"
 	"sync"
 
-	"github.com/adamsanghera/blurber/protobufs/dist/blurb"
+	"github.com/adamsanghera/blurber-protobufs/dist/blurb"
 )
 
 // Box is where blurbs are stored.

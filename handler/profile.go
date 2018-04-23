@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/adamsanghera/blurber/protobufs/dist/blurb"
-	"github.com/adamsanghera/blurber/protobufs/dist/user"
+	"github.com/adamsanghera/blurber-protobufs/dist/blurb"
+	"github.com/adamsanghera/blurber-protobufs/dist/user"
 )
 
 // Profile is the handler for /profile/ requests

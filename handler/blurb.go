@@ -8,8 +8,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/adamsanghera/blurber/protobufs/dist/blurb"
-	"github.com/adamsanghera/blurber/protobufs/dist/user"
+	"github.com/adamsanghera/blurber-protobufs/dist/blurb"
+	"github.com/adamsanghera/blurber-protobufs/dist/user"
 )
 
 func Blurb(w http.ResponseWriter, r *http.Request) {

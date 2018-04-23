@@ -5,9 +5,9 @@ import (
 	"net"
 	"os"
 
-	blurb "github.com/adamsanghera/blurber/protobufs/dist/blurb"
-	sub "github.com/adamsanghera/blurber/protobufs/dist/subscription"
-	user "github.com/adamsanghera/blurber/protobufs/dist/user"
+	blurb "github.com/adamsanghera/blurber-protobufs/dist/blurb"
+	sub "github.com/adamsanghera/blurber-protobufs/dist/subscription"
+	user "github.com/adamsanghera/blurber-protobufs/dist/user"
 	"google.golang.org/grpc"
 )
 
