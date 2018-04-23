@@ -51,9 +51,9 @@ These will be managed in branches:
 
 1. `cd` your way into `./protobufs`, and exec `./compile.sh`.
 1. `cd` your way into `./` and exec `./spinBackend.sh`
-1. Note that you'll need to manually kill the processes that are spun off here!!
 1. `cd` your way into `./` and exec `.runLocal.sh`, if the backend servers are on your laptop.  Otherwise, exec `./run.sh` if the backend is on the linode server.
 1. Point your favorite browser @ `http://localhost:4000`
+1. When you're done playing around, exec `./killBackend.sh`
 
 ## In the Wild
 

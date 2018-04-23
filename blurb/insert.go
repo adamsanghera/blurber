@@ -3,6 +3,8 @@ package blurb
 import (
 	"log"
 	"time"
+
+	"github.com/adamsanghera/blurber/protobufs/dist/blurb"
 )
 
 // AddNewBlurb consumes metadata to produce a new blurb object,
@@ -13,18 +15,24 @@ func (ll *LocalLedger) AddNewBlurb(creatorID int32, content string, creatorName 
 	freshBID := ll.measureBID()
 
 	// Create a new mapping for a user, if one does not exist.
-	if _, exists := ll.ledger[creatorID]; !exists {
-		ll.ledger[creatorID] = NewBlurbBox()
+	value, exists := ll.ledger.Load(creatorID)
+	if !exists {
+		value = NewBox()
+		ll.ledger.Store(creatorID, value)
+	}
+	box, ok := value.(*Box)
+	if !ok {
+		panic("Something went terribly wrong")
 	}
 
 	// Birth the blurb
 	creationTime := time.Now()
-	ll.ledger[creatorID].insert(
-		Blurb{
+	box.insert(
+		blurb.Blurb{
 			Content:     content,
-			Time:        creationTime,
+			UnixTime:    creationTime.Unix(),
 			Timestamp:   creationTime.Format("Jan 2 – 15:04 EDT"),
-			BID:         freshBID,
+			BlurbID:     freshBID,
 			CreatorName: creatorName,
 		})
 }
