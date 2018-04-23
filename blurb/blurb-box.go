@@ -3,16 +3,8 @@ package blurb
 import (
 	"log"
 	"sync"
-<<<<<<< Updated upstream
 
 	"github.com/adamsanghera/blurber-protobufs/dist/blurb"
-=======
-<<<<<<< Updated upstream
-=======
-
-	"github.com/adamsanghera/blurber-protobufs/dist/blurb" 
->>>>>>> Stashed changes
->>>>>>> Stashed changes
 )
 
 // Box is where blurbs are stored.
