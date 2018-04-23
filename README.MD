@@ -25,11 +25,11 @@
   - [x] UserDB
   - [X] SubscriptionDB
 
-- [ ] Ensure that backends are safe to concurrent access from multiple frontends
+- [X] Ensure that backends are safe to concurrent access from multiple frontends
 
-  - [ ] BlurbDB
-  - [ ] UserDB
-  - [ ] SubscriptionDB
+  - [X] BlurbDB
+  - [X] UserDB
+  - [X] SubscriptionDB
 
 These will be managed in branches:
 
@@ -41,11 +41,11 @@ These will be managed in branches:
     - `split-user` [x]
     - `split-subscription` [X]
 
-3. `safe` []
+3. `safe` [X]
 
-    - `safe-blurb` []
-    - `safe-user` []
-    - `safe-subscription` []
+    - `safe-blurb` [X]
+    - `safe-user` [X]
+    - `safe-subscription` [X]
 
 ## How to run
 
