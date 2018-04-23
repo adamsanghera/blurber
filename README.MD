@@ -67,6 +67,12 @@ These will be managed in branches:
 
 This app can also be found deployed on heroku, at https://dist-blurber.herokuapp.com/
 
+The Front-End server (everything in the main.go hierarchy) is hosted on heroku, and is set up to continously build on the `/release` branch on our github repo.
+
+The front-end server connects to a backend server hosted by Linode.com (it's cheap).
+
+The three (3!) backend services are hosted on the Linode server, which the heroku app sends gRPC messages to.
+
 ## Team
 
 - Adam Sanghera (as8513)
