@@ -2,6 +2,7 @@ package subscription
 
 import (
 	"log"
+	"sync"
 )
 
 // Ledger is the interface for a service that maintains a
@@ -14,8 +15,7 @@ type Ledger interface {
 // LocalLedger implements the Ledger interface,
 // by maintaining an in-memory record of follower-leader relationships.
 type LocalLedger struct {
-	// Map from UID-> map[UID] -> nonce
-	ledger map[int32]map[int32]bool
+	ledger sync.Map // maps followerID -> map-set of leaderIDs
 }
 
 // NewLocalLedger creates a new LocalLedger, instantiating its
@@ -23,27 +23,40 @@ type LocalLedger struct {
 func NewLocalLedger() *LocalLedger {
 	log.Printf("SUB-LEDGER: Initializing")
 	return &LocalLedger{
-		ledger: make(map[int32]map[int32]bool),
+		ledger: sync.Map{},
 	}
 }
 
 // AddSub adds the subscription (followerID -> leaderID) to the ledger
 func (ll *LocalLedger) AddSub(followerID int32, leaderID int32) {
 	log.Printf("SUB-LEDGER: Add sub (%d->%d)", followerID, leaderID)
-	if _, exists := ll.ledger[followerID]; !exists {
-		ll.ledger[followerID] = make(map[int32]bool)
+	if _, exists := ll.ledger.Load(followerID); !exists {
+		ll.ledger.Store(followerID, &sync.Map{})
 	}
 
-	ll.ledger[followerID][leaderID] = true
+	m, _ := ll.ledger.Load(followerID)
+	set, ok := m.(*sync.Map)
+	if !ok {
+		panic("SUB-LEDGER: Something bad sneaked into the ledger")
+	}
+
+	set.Store(leaderID, struct{}{})
 }
 
 // RemoveSub removes the subscription (followerID -> leaderID) from the ledger
 func (ll *LocalLedger) RemoveSub(followerID int32, leaderID int32) {
 	log.Printf("SUB-LEDGER: Remove sub (%d->%d)", followerID, leaderID)
-	if _, exists := ll.ledger[followerID]; !exists {
+	if _, exists := ll.ledger.Load(followerID); !exists {
 		return
 	}
-	delete(ll.ledger[followerID], leaderID)
+
+	m, _ := ll.ledger.Load(followerID)
+	set, ok := m.(*sync.Map)
+	if !ok {
+		panic("SUB-LEDGER: Something bad sneaked into the ledger")
+	}
+
+	set.Delete(leaderID)
 }
 
 // RemoveUser removes all subscriptions (X -> uid) and (uid -> X) from the ledger
@@ -51,23 +64,43 @@ func (ll *LocalLedger) RemoveUser(uid int32) {
 	log.Printf("SUB-LEDGER: Remove %d from all records", uid)
 
 	// Unsubscribe this person from every follower in the ledger
-	for followID := range ll.ledger {
-		ll.RemoveSub(followID, uid)
-	}
+	ll.ledger.Range(func(key interface{}, _ interface{}) bool {
+		keyInt, ok := key.(int32)
+		if !ok {
+			panic("SUB-LEDGER: Bad key in ledger")
+		}
+		ll.RemoveSub(keyInt, uid)
+		return true
+	})
 
 	// Remove his own subscription list
-	delete(ll.ledger, uid)
+	ll.ledger.Delete(uid)
 }
 
 // GetLeaders obtains all subscriptions of the form (uid -> X) from the ledger
 func (ll *LocalLedger) GetLeaders(uid int32) ([]int32, error) {
 	log.Printf("SUB-LEDGER: Getting all leaders for %d", uid)
-	ret := make([]int32, len(ll.ledger[uid]))
 
-	idx := 0
-	for id := range ll.ledger[uid] {
-		ret[idx] = id
-		idx++
+	ret := make([]int32, 0)
+
+	subs, exists := ll.ledger.Load(uid)
+	if !exists {
+		return ret, nil
 	}
+
+	subMap, ok := subs.(*sync.Map)
+	if !ok {
+		panic("SUB-LEDGER: Bad value in ledger")
+	}
+
+	subMap.Range(func(key interface{}, _ interface{}) bool {
+		id, ok := key.(int32)
+		if !ok {
+			panic("SUB-LEDGER: Bad value in ledger")
+		}
+		ret = append(ret, id)
+		return true
+	})
+
 	return ret, nil
 }

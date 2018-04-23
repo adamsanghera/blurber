@@ -25,11 +25,11 @@
   - [x] UserDB
   - [X] SubscriptionDB
 
-- [ ] Ensure that backends are safe to concurrent access from multiple frontends
+- [X] Ensure that backends are safe to concurrent access from multiple frontends
 
-  - [ ] BlurbDB
-  - [ ] UserDB
-  - [ ] SubscriptionDB
+  - [X] BlurbDB
+  - [X] UserDB
+  - [X] SubscriptionDB
 
 These will be managed in branches:
 
@@ -41,19 +41,19 @@ These will be managed in branches:
     - `split-user` [x]
     - `split-subscription` [X]
 
-3. `safe` []
+3. `safe` [X]
 
-    - `safe-blurb` []
-    - `safe-user` []
-    - `safe-subscription` []
+    - `safe-blurb` [X]
+    - `safe-user` [X]
+    - `safe-subscription` [X]
 
 ## How to run
 
 1. `cd` your way into `./protobufs`, and exec `./compile.sh`.
 1. `cd` your way into `./` and exec `./spinBackend.sh`
-1. Note that you'll need to manually kill the processes that are spun off here!!
 1. `cd` your way into `./` and exec `.runLocal.sh`, if the backend servers are on your laptop.  Otherwise, exec `./run.sh` if the backend is on the linode server.
 1. Point your favorite browser @ `http://localhost:4000`
+1. When you're done playing around, exec `./killBackend.sh`
 
 ## In the Wild
 
