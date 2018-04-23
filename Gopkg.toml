@@ -27,6 +27,7 @@
 [metadata.heroku]
   root-package = "github.com/adamsanghera/blurber"
   go-version = "1.10"
+  ensure = "false"
 
 [prune]
   go-tests = true
