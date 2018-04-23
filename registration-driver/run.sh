@@ -1,0 +1,1 @@
+REGISTRATION_PORT=7000 go run main.go 

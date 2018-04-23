@@ -1,10 +1,14 @@
 package handler
 
 import (
+	"context"
 	"html/template"
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/adamsanghera/blurber/protobufs/dist/blurb"
+	"github.com/adamsanghera/blurber/protobufs/dist/user"
 )
 
 func Feed(w http.ResponseWriter, r *http.Request) {
@@ -28,30 +32,35 @@ func Feed(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get our UID
-	uid, err := userDB.GetUserID(uname)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	uid, err := userDB.GetID(ctx, &user.Username{Username: uname})
 	if err != nil {
 		w.Write([]byte("Something went very wrong"))
 		panic(err)
 	}
 
 	// Get the leader map for UID
-	leaderSet, err := subDB.GetLeaders(uid)
+	leaderSet, err := subDB.GetLeadersOf(ctx, uid)
 	if err != nil {
 		w.Write([]byte("Something went very wrong"))
 		panic(err)
 	}
 
-	// Extract ids from the leader map
-	leaderIDs := make([]int, len(leaderSet))
-	i := 0
-	for id := range leaderSet {
-		leaderIDs[i] = id
-		i++
-	}
+	// ctx, cancel = context.WithTimeout(context.Background(), 10*time.Second)
+	// defer cancel()
 
 	// Generate the feed
-	bs := blurbDB.GenerateFeed(uid, leaderIDs)
+	bs, err := blurbDB.GenerateFeed(ctx, &blurb.FeedParameters{
+		RequestorID: uid,
+		LeaderIDs:   leaderSet.Leaders,
+	})
+
+	if err != nil {
+		panic(err)
+	}
 
 	// Squeeze our blurbs into the template, execute
-	t.Execute(w, bs)
+	t.Execute(w, bs.Blurbs)
 }

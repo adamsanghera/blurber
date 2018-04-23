@@ -3,29 +3,31 @@ package blurb
 import (
 	"log"
 	"sync"
+
+	"github.com/adamsanghera/blurber/protobufs/dist/blurb"
 )
 
-type BlurbBox struct {
-	Box         map[int]Blurb
-	SortedCache []Blurb
-	BoxLock     sync.Mutex
+// Box is where blurbs are stored.
+// There is one Box for every user.
+type Box struct {
+	Box         sync.Map
+	SortedCache []blurb.Blurb
 }
 
-func NewBlurbBox() *BlurbBox {
-	return &BlurbBox{
-		Box:         make(map[int]Blurb),
-		BoxLock:     sync.Mutex{},
-		SortedCache: make([]Blurb, 0),
+// NewBox creates a new Box
+func NewBox() *Box {
+	return &Box{
+		Box:         sync.Map{},
+		SortedCache: make([]blurb.Blurb, 0),
 	}
 }
 
-func (bb *BlurbBox) insert(b Blurb) {
-	bb.BoxLock.Lock()
-	defer bb.BoxLock.Unlock()
+// Insert
+func (bb *Box) insert(b blurb.Blurb) {
+	// bb.Box[b.BID] = b
+	bb.Box.Store(b.BlurbID, b)
 
-	bb.Box[b.BID] = b
-
-	bb.SortedCache = append([]Blurb{b}, bb.SortedCache...)
+	bb.SortedCache = append([]blurb.Blurb{b}, bb.SortedCache...)
 
 	if len(bb.SortedCache) > 10 {
 		bb.SortedCache = bb.SortedCache[:10]
@@ -34,35 +36,37 @@ func (bb *BlurbBox) insert(b Blurb) {
 	log.Printf("Sorted cache:\n %v", bb.SortedCache)
 }
 
-func (bb *BlurbBox) delete(bid int) {
-	bb.BoxLock.Lock()
-	defer bb.BoxLock.Unlock()
-
-	delete(bb.Box, bid)
+func (bb *Box) delete(bid int32) {
+	bb.Box.Delete(bid)
 
 	for k, v := range bb.SortedCache {
-		if v.BID == bid {
+		if v.BlurbID == bid {
 			bb.SortedCache = append(bb.SortedCache[:k], bb.SortedCache[k+1:]...)
 			break
 		}
 	}
 }
 
-func (bb *BlurbBox) snapshot() []Blurb {
-	bb.BoxLock.Lock()
-	defer bb.BoxLock.Unlock()
+func (bb *Box) snapshot() []blurb.Blurb {
+	blurbs := make([]blurb.Blurb, 0)
 
-	blurbs := make([]Blurb, 0)
-	for _, v := range bb.Box {
-		blurbs = append(blurbs, v)
-	}
+	bb.Box.Range(func(k interface{}, v interface{}) bool {
+		_, ok := k.(int32)
+		if !ok {
+			return false
+		}
+		val, ok := v.(blurb.Blurb)
+		if !ok {
+			return false
+		}
+
+		blurbs = append(blurbs, val)
+		return true
+	})
 
 	return blurbs
 }
 
-func (bb *BlurbBox) sortedCache() []Blurb {
-	bb.BoxLock.Lock()
-	defer bb.BoxLock.Unlock()
-
+func (bb *Box) sortedCache() []blurb.Blurb {
 	return bb.SortedCache
 }

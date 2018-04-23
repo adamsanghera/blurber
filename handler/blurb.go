@@ -1,11 +1,15 @@
 package handler
 
 import (
+	"context"
 	"html/template"
 	"log"
 	"net/http"
-	"time"
 	"strconv"
+	"time"
+
+	"github.com/adamsanghera/blurber/protobufs/dist/blurb"
+	"github.com/adamsanghera/blurber/protobufs/dist/user"
 )
 
 func Blurb(w http.ResponseWriter, r *http.Request) {
@@ -42,8 +46,12 @@ func Blurb(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if r.URL.Path == "/blurb/add" {
+
+			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+			defer cancel()
+
 			// Retrieve uid
-			usrID, err := userDB.GetUserID(username)
+			usrID, err := userDB.GetID(ctx, &user.Username{Username: username})
 			if err != nil {
 				w.Write([]byte("Something went wrong\n\terr: " + err.Error()))
 				return
@@ -52,15 +60,28 @@ func Blurb(w http.ResponseWriter, r *http.Request) {
 			// Create blurb
 			// TODO: Validate content to be non-empty
 			content := r.Form.Get("blurb-write-text")
-			blurbDB.AddNewBlurb(usrID, content, username)
+
+			_, err = blurbDB.Add(ctx, &blurb.NewBlurb{
+				Author:   usrID,
+				Content:  content,
+				Username: username,
+			})
+
+			if err != nil {
+				panic(err)
+			}
 
 			http.Redirect(w, r, "/profile/", http.StatusFound)
 			return
 		}
 
 		if r.URL.Path == "/blurb/remove" {
+
+			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+			defer cancel()
+
 			// Retrieve uid
-			usrID, err := userDB.GetUserID(username)
+			usrID, err := userDB.GetID(ctx, &user.Username{Username: username})
 			if err != nil {
 				w.Write([]byte("Something went wrong\n\terr: " + err.Error()))
 				return
@@ -68,11 +89,15 @@ func Blurb(w http.ResponseWriter, r *http.Request) {
 
 			sBid := r.Form.Get("remove-bid")
 			bid, _ := strconv.Atoi(sBid)
-			blurbDB.RemoveBlurb(usrID, bid)
+
+			blurbDB.Delete(ctx, &blurb.BlurbIndex{
+				Author:  usrID,
+				BlurbID: int32(bid),
+			})
 
 			http.Redirect(w, r, "/profile/", http.StatusFound)
 			return
-		}		
+		}
 
 		w.Write([]byte("Something went wrong\n"))
 	}

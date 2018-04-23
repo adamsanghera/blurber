@@ -1,9 +1,13 @@
 package handler
 
 import (
+	"context"
 	"log"
 	"net/http"
 	"time"
+
+	sub "github.com/adamsanghera/blurber/protobufs/dist/subscription"
+	"github.com/adamsanghera/blurber/protobufs/dist/user"
 )
 
 func Subscribe(w http.ResponseWriter, r *http.Request) {
@@ -34,8 +38,13 @@ func Subscribe(w http.ResponseWriter, r *http.Request) {
 
 	// Obtain all variables
 	leaderName := r.Form.Get("subscribe-leader")
-	uid, err := userDB.GetUserID(uname)
-	lid, lErr := userDB.GetUserID(leaderName)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	// Retrieve uid
+	uid, err := userDB.GetID(ctx, &user.Username{Username: uname})
+	lid, lErr := userDB.GetID(ctx, &user.Username{Username: leaderName})
 
 	// Verify leader exists
 	if lErr != nil {
@@ -50,8 +59,19 @@ func Subscribe(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Submit subscription request to ledger
-	subDB.AddSub(uid, lid)
-	blurbDB.InvalidateCache(uid)
+	_, err = subDB.Add(ctx, &sub.Subscription{
+		Follower: uid,
+		Leader:   lid,
+	})
+
+	if err != nil {
+		panic(err)
+	}
+
+	_, err = blurbDB.InvalidateFeedCache(ctx, uid)
+	if err != nil {
+		panic(err)
+	}
 
 	// Redirect to feed
 	http.Redirect(w, r, "/feed/", http.StatusFound)
@@ -73,7 +93,7 @@ func Unsubscribe(w http.ResponseWriter, r *http.Request) {
 
 	// Only posts allowed
 	if r.Method != "POST" {
-		log.Printf("whoops %v",r.Method)
+		log.Printf("whoops %v", r.Method)
 		return
 	}
 
@@ -85,13 +105,24 @@ func Unsubscribe(w http.ResponseWriter, r *http.Request) {
 
 	// Obtain all variables
 	leaderName := r.Form.Get("blurber")
-	uid, _ := userDB.GetUserID(uname)
-	lid, _ := userDB.GetUserID(leaderName)
 
-	// Send unsubscription request to ledger
-	subDB.RemoveSub(uid, lid)
-	blurbDB.InvalidateCache(uid)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	// Retrieve uid
+	uid, _ := userDB.GetID(ctx, &user.Username{Username: uname})
+	lid, _ := userDB.GetID(ctx, &user.Username{Username: leaderName})
+
+	subDB.Delete(ctx, &sub.Subscription{
+		Follower: uid,
+		Leader:   lid,
+	})
+
+	_, err = blurbDB.InvalidateFeedCache(ctx, uid)
+	if err != nil {
+		panic(err)
+	}
 
 	// Redirect to feed
-	http.Redirect(w, r, "/feed/", http.StatusFound)	
+	http.Redirect(w, r, "/feed/", http.StatusFound)
 }

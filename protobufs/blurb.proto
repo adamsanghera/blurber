@@ -1,0 +1,40 @@
+syntax = "proto3";
+
+import "common.proto";
+
+service BlurbDB {
+  rpc Delete (BlurbIndex) returns (Empty);
+  rpc Add (NewBlurb) returns (Empty);
+  rpc GenerateFeed (FeedParameters) returns (Blurbs);
+  rpc GetRecentBy(UserID) returns (Blurbs);
+  rpc DeleteHistoryOf(UserID) returns (Empty);
+  rpc InvalidateFeedCache(UserID) returns (Empty);
+}
+
+message FeedParameters {
+  UserID RequestorID = 1;
+  repeated UserID LeaderIDs = 2;
+}
+
+message Blurb {
+  string  Content = 1;
+  string  Timestamp = 2;
+  int64   UnixTime = 3;    // neutral encoding of time.time
+  int32   BlurbID = 4;
+  string  CreatorName = 5;
+}
+
+message Blurbs {
+  repeated Blurb Blurbs = 1;
+}
+
+message BlurbIndex {
+  UserID  Author = 1;
+  int32   BlurbID = 2;
+}
+
+message NewBlurb {
+  UserID   Author = 1;
+  string   Content = 2;
+  string   Username = 3;
+}

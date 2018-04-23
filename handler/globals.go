@@ -1,11 +1,11 @@
 package handler
 
 import (
-	"github.com/adamsanghera/blurber/blurb"
-	reg "github.com/adamsanghera/blurber/registration"
-	sub "github.com/adamsanghera/blurber/subscription"
+	blurb "github.com/adamsanghera/blurber/protobufs/dist/blurb"
+	sub "github.com/adamsanghera/blurber/protobufs/dist/subscription"
+	userpb "github.com/adamsanghera/blurber/protobufs/dist/user"
 )
 
-var userDB = reg.NewLocalLedger()
-var blurbDB = blurb.NewLocalLedger()
-var subDB = sub.NewLocalLedger()
+var userDB userpb.UserDBClient
+var blurbDB blurb.BlurbDBClient
+var subDB sub.SubscriptionDBClient

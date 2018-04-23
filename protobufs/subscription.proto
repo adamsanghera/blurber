@@ -1,0 +1,19 @@
+syntax="proto3";
+
+import "common.proto";
+
+service SubscriptionDB {
+  rpc Add(Subscription) returns (Empty);
+  rpc Delete(Subscription) returns (Empty);
+  rpc DeletePresenceOf(UserID) returns (Empty);
+  rpc GetLeadersOf(UserID) returns (Leaders);
+}
+
+message Subscription {
+  UserID Follower = 1;
+  UserID Leader = 2;
+}
+
+message Leaders {
+  repeated UserID leaders = 1;
+}

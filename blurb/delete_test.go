@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strconv"
 	"testing"
+	"time"
 )
 
 func TestLocalLedger_RemoveAllBlurbsBy(t *testing.T) {
@@ -36,19 +37,19 @@ func TestLocalLedger_RemoveAllBlurbsBy(t *testing.T) {
 func TestLocalLedger_RemoveBlurb(t *testing.T) {
 	tests := []struct {
 		name              string
-		numBlurbsExisting int
-		blurbToDelete     int
+		numBlurbsExisting int32
+		blurbToDelete     int32
 	}{}
 
-	bDel := 0
-	numBlurbsExisting := []int{10, 15, 30}
+	bDel := int32(0)
+	numBlurbsExisting := []int32{10, 15, 30}
 
 	for _, numExisting := range numBlurbsExisting {
 		for bDel < numExisting {
 			tests = append(tests, struct {
 				name              string
-				numBlurbsExisting int
-				blurbToDelete     int
+				numBlurbsExisting int32
+				blurbToDelete     int32
 			}{
 				fmt.Sprintf("Deleting %d from a history of length %d", bDel, numExisting),
 				numExisting,
@@ -62,8 +63,8 @@ func TestLocalLedger_RemoveBlurb(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ll := NewLocalLedger()
-			for idx := 0; idx < tt.numBlurbsExisting; idx++ {
-				ll.AddNewBlurb(0, "i m d best "+strconv.Itoa(idx), "adam")
+			for idx := int32(0); idx < tt.numBlurbsExisting; idx++ {
+				ll.AddNewBlurb(0, "i m d best "+strconv.Itoa(int(idx)), "adam")
 			}
 
 			ll.RemoveBlurb(0, tt.blurbToDelete)
@@ -72,20 +73,22 @@ func TestLocalLedger_RemoveBlurb(t *testing.T) {
 			cachedBlurbs := ll.GetRecentBlurbsBy(0)
 
 			for _, b := range allBlurbs {
-				if b.BID == tt.blurbToDelete {
+				if b.BlurbID == tt.blurbToDelete {
 					t.Errorf("History contains the supposedly deleted blurb")
 				}
 			}
 
 			for _, b := range cachedBlurbs {
-				if b.BID == tt.blurbToDelete {
+				if b.BlurbID == tt.blurbToDelete {
 					t.Errorf("Cache contains the supposedly deleted blurb")
 				}
 			}
 
 			for idx := range cachedBlurbs {
 				if idx > 1 {
-					if cachedBlurbs[idx].Time.After(cachedBlurbs[idx-1].Time) {
+					iTime := time.Unix(cachedBlurbs[idx].UnixTime, 0)
+					jTime := time.Unix(cachedBlurbs[idx-1].UnixTime, 0)
+					if iTime.After(jTime) {
 						t.Errorf("Cache is out of order: {%s} is placed before {%s}", cachedBlurbs[idx-1].Timestamp, cachedBlurbs[idx].Timestamp)
 					}
 				}

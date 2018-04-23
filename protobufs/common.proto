@@ -1,0 +1,13 @@
+syntax="proto3";
+
+option go_package = "github.com/adamsanghera/blurber/protobufs/dist/common";
+
+message Empty{}
+
+message UserID {
+  int32 UserID = 1;
+}
+
+message Error {
+  string Message = 1;
+}

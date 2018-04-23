@@ -1,0 +1,30 @@
+syntax="proto3";
+
+import "common.proto";
+
+service UserDB {
+  rpc Add (Credentials) returns (Empty);
+  rpc Delete (Username) returns (Empty);
+  rpc GetID (Username) returns (UserID);
+  rpc LogIn (Credentials) returns (Token);
+  rpc CheckIn (SessionCredentials) returns (Token);
+  rpc CheckOut(SessionCredentials) returns (Empty);
+}
+
+message Credentials {
+  string Username = 1;
+  string Password = 2;
+}
+
+message Token {
+  string Token = 1;
+}
+
+message SessionCredentials {
+  string Username = 1;
+  string Token = 2;
+}
+
+message Username {
+  string Username = 1;
+}

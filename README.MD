@@ -1,4 +1,4 @@
-# Blurber 
+# Blurber
 
 ## Main features
 
@@ -9,13 +9,51 @@
 - [x] Unsubscribe on feed
 - [x] Simple profile page
 - [x] Delete personal single blurbs
-- [ ] Feed: show all blurbs ('Discover') vs. just subscription
+- [ ] OPTIONAL: Feed option to show all blurbs ('Discover' page) vs. just subscription
 
+## Roadmap for detaching backend
+
+- [X] Define protobufs for each backend service:
+
+  - [X] BlurbDB
+  - [X] UserDB
+  - [X] SubscriptionDB
+
+- [x] Split off backends to be behind a GRPC call:
+
+  - [X] BlurbDB
+  - [x] UserDB
+  - [X] SubscriptionDB
+
+- [X] Ensure that backends are safe to concurrent access from multiple frontends
+
+  - [X] BlurbDB
+  - [X] UserDB
+  - [X] SubscriptionDB
+
+These will be managed in branches:
+
+1. `protobufs` [X]
+
+2. `split` [x]
+
+    - `split-blurb` [X]
+    - `split-user` [x]
+    - `split-subscription` [X]
+
+3. `safe` [X]
+
+    - `safe-blurb` [X]
+    - `safe-user` [X]
+    - `safe-subscription` [X]
 
 ## How to run
 
-1. `PORT=4000 go run main.go` or `PORT=4000 DEBUG=1 go run main.go`
-1. `http://localhost:4000`
+1. `cd` your way into `./protobufs`, and exec `./compile.sh`.
+1. `cd` your way into `./` and exec `./spinBackend.sh`
+1. `cd` your way into `./` and exec `.runLocal.sh`, if the backend servers are on your laptop.  Otherwise, exec `./run.sh` if the backend is on the linode server.
+1. Point your favorite browser @ `http://localhost:4000`
+1. When you're done playing around, exec `./killBackend.sh`
 
 ## In the Wild
 
