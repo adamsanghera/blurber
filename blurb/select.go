@@ -37,5 +37,5 @@ func (ll *LocalLedger) GetRecentBlurbsBy(creatorID int32) []blurb.Blurb {
 		panic("Something bad was inserted into the ledger")
 	}
 
-	return box.sortedCache()
+	return box.getCache()
 }
