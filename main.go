@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	log.Printf("SERVER: Starting...")
+	log.Printf("SERVER: Preparing handlers...\n")
 
 	http.HandleFunc("/login/", handler.Auth)
 	http.HandleFunc("/feed/", handler.Feed)
@@ -21,5 +21,8 @@ func main() {
 	http.HandleFunc("/logout/", handler.Logout)
 	http.HandleFunc("/", handler.Catcher)
 
-	http.ListenAndServe(":"+os.Getenv("PORT"), nil)
+	log.Printf("SERVER: Serving...")
+	if err := http.ListenAndServe(":"+os.Getenv("PORT"), nil); err != nil {
+		log.Fatalf("SERVER: Failed to listen and serve on port {%s}.  Error message: {%v}", os.Getenv("PORT"), err.Error())
+	}
 }
