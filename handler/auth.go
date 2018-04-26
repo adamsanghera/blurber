@@ -18,18 +18,19 @@ func Auth(w http.ResponseWriter, r *http.Request) {
 		log.Printf("HANDLERS-AUTH: Request serviced in %5.1f seconds", time.Since(start).Seconds())
 	}()
 
-	if r.Method == "GET" {
-		t, err := template.ParseFiles("./static-assets/login/index.html")
-		if err != nil {
-			panic(err)
-		}
+	errMsg := struct {
+		ErrMsg string
+	}{}
 
-		msg := struct {
-			ErrMsg string
-		}{}
+	t, err := template.ParseFiles("./static-assets/login/index.html")
+	if err != nil {
+		panic(err)
+	}
+
+	if r.Method == "GET" {
 		if r.URL.Path == "/login/expired/" {
-			msg.ErrMsg = "Sorry, your session expired"
-			t.Execute(w, msg)
+			errMsg.ErrMsg = "Sorry, your session expired"
+			t.Execute(w, errMsg)
 			return
 		}
 
@@ -46,6 +47,8 @@ func Auth(w http.ResponseWriter, r *http.Request) {
 		var username string
 		var password string
 
+		// We're doing something a bit clever here.
+		// Extract username/password depending on request type, and returning "early" with errors if encountered
 		if r.URL.Path == "/login/existing" {
 			// Login
 			log.Printf("HANDLERS-AUTH: Log-in request received")
@@ -64,16 +67,13 @@ func Auth(w http.ResponseWriter, r *http.Request) {
 			_, err := userDB.Add(ctx, &user.Credentials{Username: username, Password: password})
 
 			if err != nil {
-				t, tempErr := template.ParseFiles("./static-assets/login/index.html")
-				if tempErr != nil {
-					panic(tempErr)
-				}
-
-				t.Execute(w, struct{ ErrMsg string }{err.Error()})
+				errMsg.ErrMsg = err.Error()
+				t.Execute(w, errMsg)
 				return
 			}
 		} else {
-			w.Write([]byte("Something went wrong\n"))
+			errMsg.ErrMsg = "Invalid request"
+			t.Execute(w, errMsg)
 			return
 		}
 
@@ -83,12 +83,8 @@ func Auth(w http.ResponseWriter, r *http.Request) {
 
 		token, err := userDB.LogIn(ctx, &user.Credentials{Username: username, Password: password})
 		if err != nil {
-			t, tempErr := template.ParseFiles("./static-assets/login/index.html")
-			if tempErr != nil {
-				panic(tempErr)
-			}
-
-			t.Execute(w, struct{ ErrMsg string }{err.Error()})
+			errMsg.ErrMsg = err.Error()
+			t.Execute(w, errMsg)
 			return
 		}
 
@@ -114,6 +110,6 @@ func Auth(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/feed", http.StatusFound)
 		return
 	}
-
-	w.Write([]byte("Something went wrong\n"))
+	errMsg.ErrMsg = "Something went wrong"
+	t.Execute(w, errMsg)
 }

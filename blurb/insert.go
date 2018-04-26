@@ -17,7 +17,7 @@ func (ll *LocalLedger) AddNewBlurb(creatorID int32, content string, creatorName 
 	// Create a new mapping for a user, if one does not exist.
 	value, exists := ll.ledger.Load(creatorID)
 	if !exists {
-		value = NewBox()
+		value = NewBox(ll.feeds.blurbsPerUser)
 		ll.ledger.Store(creatorID, value)
 	}
 	box, ok := value.(*Box)

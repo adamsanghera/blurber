@@ -9,11 +9,20 @@ import (
 	"github.com/adamsanghera/blurber-protobufs/dist/blurb"
 )
 
+// FeedCache is a timestamped data structure for cacheing
+// the most-recently generated feed for a given user.
+type FeedCache struct {
+	timestamp  time.Time
+	sortedFeed []blurb.Blurb
+}
+
+// GenerateFeed creates a cached, time-sorted list of blurbs for a given user.
+// It is relatively simple, simply obtaining the N most recent blurbs from every
 func (ll *LocalLedger) GenerateFeed(readerID int32, sources []int32) []blurb.Blurb {
 	log.Printf("BLURB-LEDGER: Generating a feed for %d", readerID)
 
 	// Hit cache, if it exists and is fresh
-	value, exists := ll.feedCache.Load(readerID)
+	value, exists := ll.feeds.cache.Load(readerID)
 	if exists {
 		cache, ok := value.(FeedCache)
 		if !ok {
@@ -41,12 +50,12 @@ func (ll *LocalLedger) GenerateFeed(readerID int32, sources []int32) []blurb.Blu
 		return iTime.After(jTime)
 	})
 
-	if len(ret) > 100 {
-		ret = ret[:100]
+	if len(ret) > ll.feeds.length {
+		ret = ret[:ll.feeds.length]
 	}
 
 	// Store the result in the cache
-	ll.feedCache.Store(readerID, FeedCache{
+	ll.feeds.cache.Store(readerID, FeedCache{
 		sortedFeed: ret,
 		timestamp:  time.Now(),
 	})
@@ -61,5 +70,5 @@ func (ll *LocalLedger) GenerateFeed(readerID int32, sources []int32) []blurb.Blu
 // InvalidateCache wipes the cache for the given user.
 func (ll *LocalLedger) InvalidateCache(readerID int32) {
 	log.Printf("BLURB-LEDGER: Invalidating cache for %d", readerID)
-	ll.feedCache.Delete(readerID)
+	ll.feeds.cache.Delete(readerID)
 }

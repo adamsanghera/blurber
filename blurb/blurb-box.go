@@ -12,13 +12,17 @@ import (
 type Box struct {
 	Box         sync.Map
 	SortedCache []blurb.Blurb
+
+	cacheSize int
 }
 
 // NewBox creates a new Box
-func NewBox() *Box {
+func NewBox(cacheSize int) *Box {
 	return &Box{
 		Box:         sync.Map{},
 		SortedCache: make([]blurb.Blurb, 0),
+
+		cacheSize: cacheSize,
 	}
 }
 
@@ -29,8 +33,8 @@ func (bb *Box) insert(b blurb.Blurb) {
 
 	bb.SortedCache = append([]blurb.Blurb{b}, bb.SortedCache...)
 
-	if len(bb.SortedCache) > 10 {
-		bb.SortedCache = bb.SortedCache[:10]
+	if len(bb.SortedCache) > bb.cacheSize {
+		bb.SortedCache = bb.SortedCache[:bb.cacheSize]
 	}
 
 	log.Printf("Sorted cache:\n %v", bb.SortedCache)
@@ -67,6 +71,6 @@ func (bb *Box) snapshot() []blurb.Blurb {
 	return blurbs
 }
 
-func (bb *Box) sortedCache() []blurb.Blurb {
+func (bb *Box) getCache() []blurb.Blurb {
 	return bb.SortedCache
 }
