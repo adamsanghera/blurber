@@ -54,7 +54,7 @@ func Feed(w http.ResponseWriter, r *http.Request) {
 	// Generate the feed
 	bs, err := blurbDB.GenerateFeed(ctx, &blurb.FeedParameters{
 		RequestorID: uid,
-		LeaderIDs:   leaderSet.Leaders,
+		LeaderIDs:   leaderSet.Users,
 	})
 
 	if err != nil {

@@ -34,7 +34,7 @@ func (ls *LedgerServer) DeletePresenceOf(ctx context.Context, in *common.UserID)
 	return &common.Empty{}, nil
 }
 
-func (ls *LedgerServer) GetLeadersOf(ctx context.Context, in *common.UserID) (*subpb.Leaders, error) {
+func (ls *LedgerServer) GetLeadersOf(ctx context.Context, in *common.UserID) (*subpb.Users, error) {
 	ret, err := ls.ledger.GetLeaders(in.UserID)
 
 	retList := make([]*common.UserID, len(ret))
@@ -43,7 +43,21 @@ func (ls *LedgerServer) GetLeadersOf(ctx context.Context, in *common.UserID) (*s
 		retList[k] = &common.UserID{UserID: ret[k]}
 	}
 
-	return &subpb.Leaders{
-		Leaders: retList,
+	return &subpb.Users{
+		Users: retList,
+	}, err
+}
+
+func (ls *LedgerServer) GetFollowersOf(ctx context.Context, in *common.UserID) (*subpb.Users, error) {
+	ret, err := ls.ledger.GetFollowers(in.UserID)
+
+	retList := make([]*common.UserID, len(ret))
+
+	for k := range ret {
+		retList[k] = &common.UserID{UserID: ret[k]}
+	}
+
+	return &subpb.Users{
+		Users: retList,
 	}, err
 }

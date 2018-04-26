@@ -38,6 +38,11 @@ func RemoveAcc(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
+	followers, err := subDB.GetFollowersOf(ctx, usrID)
+	if err != nil {
+		panic(err)
+	}
+
 	_, err = subDB.DeletePresenceOf(ctx, usrID)
 	if err != nil {
 		panic(err)
@@ -46,6 +51,10 @@ func RemoveAcc(w http.ResponseWriter, r *http.Request) {
 	_, err = blurbDB.DeleteHistoryOf(ctx, usrID)
 	if err != nil {
 		panic(err)
+	}
+
+	for _, followerID := range followers.Users {
+		blurbDB.InvalidateFeedCache(ctx, followerID)
 	}
 
 	http.Redirect(w, r, "/login/", http.StatusFound)
