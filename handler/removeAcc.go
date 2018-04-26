@@ -33,9 +33,15 @@ func RemoveAcc(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userDB.Delete(ctx, &user.Username{Username: username})
+	_, err = userDB.Delete(ctx, &user.Username{Username: username})
+	if err != nil {
+		panic(err)
+	}
 
-	subDB.DeletePresenceOf(ctx, usrID)
+	_, err = subDB.DeletePresenceOf(ctx, usrID)
+	if err != nil {
+		panic(err)
+	}
 
 	_, err = blurbDB.DeleteHistoryOf(ctx, usrID)
 	if err != nil {
