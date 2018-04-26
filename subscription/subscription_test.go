@@ -22,6 +22,13 @@ func TestLocalLedger_GetLeaders(t *testing.T) {
 
 			for _, leader := range tt.leaders {
 				ll.AddSub(tt.follower, leader)
+				ret, err := ll.GetFollowers(leader)
+				if err != nil {
+					t.Fatalf("Couldn't retrieve followers for leader %d", leader)
+				}
+				if ret[0] != tt.follower {
+					t.Fatalf("Incorrect follower %d for leader", ret[0])
+				}
 			}
 
 			ll.RemoveUser(tt.leaders[0])
@@ -34,6 +41,17 @@ func TestLocalLedger_GetLeaders(t *testing.T) {
 
 			if len(ret) != 0 {
 				t.Fatalf("Wrong number of leaders: %d", len(ret))
+			}
+
+			for _, leader := range tt.leaders {
+				ret, err := ll.GetFollowers(leader)
+				if err != nil {
+					t.Fatalf("Couldn't retrieve followers for leader %d", leader)
+				}
+
+				if len(ret) != 0 {
+					t.Fatalf("Should be zero followers for %d, instead it is %d", leader, len(ret))
+				}
 			}
 		})
 	}

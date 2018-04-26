@@ -59,45 +59,42 @@ func (ll *LocalLedger) AddSub(followerID int32, leaderID int32) {
 // RemoveSub removes the subscription (followerID -> leaderID) from the ledger
 func (ll *LocalLedger) RemoveSub(followerID int32, leaderID int32) {
 	log.Printf("SUB-LEDGER: Remove sub (%d->%d)", followerID, leaderID)
-	if _, exists := ll.followLead.Load(followerID); !exists {
-		return
+	if _, exists := ll.followLead.Load(followerID); exists {
+		m, _ := ll.followLead.Load(followerID)
+		set, ok := m.(*sync.Map)
+		if !ok {
+			panic("SUB-LEDGER: Something bad sneaked into the ledger")
+		}
+		set.Delete(leaderID)
 	}
 
-	if _, exists := ll.leadFollow.Load(leaderID); !exists {
-		return
-	}
+	if _, exists := ll.leadFollow.Load(leaderID); exists {
+		m, _ := ll.leadFollow.Load(leaderID)
+		lf, ok := m.(*sync.Map)
+		if !ok {
+			panic("SUB-LEDGER: Something bad sneaked into the ledger")
+		}
 
-	m, _ := ll.followLead.Load(followerID)
-	set, ok := m.(*sync.Map)
-	if !ok {
-		panic("SUB-LEDGER: Something bad sneaked into the ledger")
+		lf.Delete(followerID)
 	}
-
-	m, _ = ll.leadFollow.Load(leaderID)
-	lf, ok := m.(*sync.Map)
-	if !ok {
-		panic("SUB-LEDGER: Something bad sneaked into the ledger")
-	}
-
-	set.Delete(leaderID)
-	lf.Delete(followerID)
 }
 
 // RemoveUser removes all subscriptions (X -> uid) and (uid -> X) from the ledger
 func (ll *LocalLedger) RemoveUser(uid int32) {
 	log.Printf("SUB-LEDGER: Remove %d from all records", uid)
 
-	// Unsubscribe this person from every follower in the ledger
-	ll.followLead.Range(func(key interface{}, _ interface{}) bool {
-		keyInt, ok := key.(int32)
-		if !ok {
-			panic("SUB-LEDGER: Bad key in ledger")
-		}
-		ll.RemoveSub(keyInt, uid) // removes from both lf and fl lists
-		return true
-	})
+	// Obtain list of leaders
+	leaders, err := ll.GetLeaders(uid)
+	if err != nil {
+		panic("SUB-LEDGER can't get leaders")
+	}
 
-	// Remove leader and follower lists
+	// Range over leaders
+	for _, leader := range leaders {
+		ll.RemoveSub(uid, leader) // removes from both lists
+	}
+
+	// Delete leader and follower lists for uid
 	ll.followLead.Delete(uid)
 	ll.leadFollow.Delete(uid)
 }
