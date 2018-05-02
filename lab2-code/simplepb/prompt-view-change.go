@@ -58,7 +58,7 @@ func (srv *PBServer) PromptViewChange(newView int32) {
 		}
 		svArgs := &replication.SVArgs{
 			View: vcArgs.View,
-			// Log:  log,
+			Log:  log,
 		}
 		// send StartView to all servers including myself
 		for i := 0; i < len(srv.peers); i++ {

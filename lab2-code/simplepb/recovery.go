@@ -1,6 +1,7 @@
 package simplepb
 
 import (
+	"context"
 	"log"
 
 	"github.com/adamsanghera/blurber-protobufs/dist/replication"
@@ -32,7 +33,6 @@ func (srv *PBServer) sendRecovery() {
 	srv.mu.Lock()
 	log.Printf("Server %d: CPP in REC: Beginning recovery, locked until completion...\n", srv.me)
 	srv.status = RECOVERING
-	rep := &replication.RecoveryReply{}
 	arg := &replication.RecoveryArgs{
 		View:   srv.currentView,
 		Server: srv.me,
@@ -40,7 +40,8 @@ func (srv *PBServer) sendRecovery() {
 
 	for !good {
 		log.Printf("Server %d: CPP in REC: Sending recovery request\n", srv.me)
-		good = srv.peers[GetPrimary(srv.currentView, len(srv.peers))].Call("PBServer.Recovery", arg, rep)
+		rep, err := srv.peers[GetPrimary(srv.currentView, int32(len(srv.peers)))].Recovery(context.Background(), arg)
+		good = err == nil
 
 		if good {
 			log.Printf("Server %d: CPP in REC: Got a response from primary!\n", srv.me)

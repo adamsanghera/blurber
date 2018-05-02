@@ -1,10 +1,13 @@
 package simplepb
 
 import (
+	"context"
 	"log"
+
+	"github.com/adamsanghera/blurber-protobufs/dist/replication"
 )
 
-func (srv *PBServer) syncrhonize(index int, view int, commit int, command interface{}) {
+func (srv *PBServer) syncrhonize(index int32, view int32, commit int32, command *replication.Command) {
 	outbox := make(chan bool)
 
 	go func() {
@@ -47,23 +50,21 @@ func (srv *PBServer) syncrhonize(index int, view int, commit int, command interf
 	for i := range srv.peers {
 		// log.Printf("PRIMARY: Woohoo view %d, for PRIMARY of %d\n", view, i, len(srv.peers))
 		// log.Printf("PRIMARY: Result of GetPrimary: %d", GetPrimary(srv.currentView, len(srv.peers)))
-		if GetPrimary(srv.currentView, len(srv.peers)) != i {
-			go func(backupAddr string, backupNum int) {
-				pArgs := &PrepareArgs{
+		if GetPrimary(srv.currentView, int32(len(srv.peers))) != int32(i) {
+			go func(backup replication.ReplicationClient, backupNum int) {
+				pArgs := &replication.PrepareArgs{
 					View:          view,
 					PrimaryCommit: commit,
 					Index:         index,
 					Entry:         command,
 				}
-				pReply := &PrepareReply{}
+				pReply := &replication.PrepareReply{}
 				log.Printf("PRIMARY: PREP for %d -> %d: Sending RPC\n", index, backupNum)
-				ok := backupAddr.Call("PBServer.Prepare", pArgs, pReply)
-				log.Printf("PRIMARY: PREP for %d -> %d: Response recvd: {%v}\n", index, backupNum, ok)
-				if !ok {
+				pReply, err := backup.Prepare(context.Background(), pArgs)
+				log.Printf("PRIMARY: PREP for %d -> %d: Response recvd: {%v}\n", index, backupNum, err == nil)
+				if err != nil {
 					outbox <- false
 				} else {
-					// ADAM: Do we need to use the View element of the reply at all?
-					//   --> We probably need it to send commits.
 					log.Printf("PRIMARY: PREP for %d -> %d: Forwarding to ACC\n", index, backupNum)
 					outbox <- pReply.Success
 				}

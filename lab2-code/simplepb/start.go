@@ -2,6 +2,8 @@ package simplepb
 
 import (
 	"log"
+
+	"github.com/adamsanghera/blurber-protobufs/dist/replication"
 )
 
 // Start() is invoked by tester on some replica server to replicate a
@@ -16,15 +18,15 @@ import (
 // *if it's eventually committed*. The second return value is the current
 // view. The third return value is true if this server believes it is
 // the primary.
-func (srv *PBServer) Start(command interface{}) (
-	index int, view int, ok bool) {
+func (srv *PBServer) Start(command *replication.Command) (
+	index int32, view int32, ok bool) {
 	srv.mu.Lock()
 	// log.Printf("Server %d: Received start RPC\n", srv.me)
 	// do not process command if status is not NORMAL
 	// and if i am not the primary in the current view
 	if srv.status != NORMAL {
 		return -1, srv.currentView, false
-	} else if GetPrimary(srv.currentView, len(srv.peers)) != srv.me {
+	} else if GetPrimary(srv.currentView, int32(len(srv.peers))) != srv.me {
 		return -1, srv.currentView, false
 	}
 
@@ -32,7 +34,7 @@ func (srv *PBServer) Start(command interface{}) (
 
 	// Append the command, update state
 	srv.log = append(srv.log, command)
-	index = len(srv.log) - 1
+	index = int32(len(srv.log) - 1)
 	view = srv.currentView
 	commit := srv.commitIndex
 

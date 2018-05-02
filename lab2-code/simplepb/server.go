@@ -7,6 +7,7 @@ package simplepb
 //
 
 import (
+	"context"
 	"sync"
 
 	"github.com/adamsanghera/blurber-protobufs/dist/replication"
@@ -34,8 +35,8 @@ type PBServer struct {
 	status         int32                           // the server's current status (NORMAL, VIEWCHANGE or RECOVERING)
 	lastNormalView int32                           // the latest view which had a NORMAL status
 
-	log         []interface{} // the log of "commands"
-	commitIndex int32         // all log entries <= commitIndex are considered to have been committed.
+	log         []*replication.Command // the log of "commands"
+	commitIndex int32                  // all log entries <= commitIndex are considered to have been committed.
 
 	// ... other state that you might need ...
 	prepChan chan *CallbackArg // Channel used by prep calls to communicate with the central prep-processor
@@ -50,7 +51,7 @@ func GetPrimary(view int32, nservers int32) int32 {
 
 // IsCommitted is called by tester to check whether an index position
 // has been considered committed by this server
-func (srv *PBServer) IsCommitted(index int) (committed bool) {
+func (srv *PBServer) IsCommitted(index int32) (committed bool) {
 	srv.mu.Lock()
 	defer srv.mu.Unlock()
 	if srv.commitIndex >= index {
@@ -61,7 +62,7 @@ func (srv *PBServer) IsCommitted(index int) (committed bool) {
 
 // ViewStatus is called by tester to find out the current view of this server
 // and whether this view has a status of NORMAL.
-func (srv *PBServer) ViewStatus() (currentView int, statusIsNormal bool) {
+func (srv *PBServer) ViewStatus() (currentView int32, statusIsNormal bool) {
 	srv.mu.Lock()
 	defer srv.mu.Unlock()
 	return srv.currentView, srv.status == NORMAL
@@ -85,14 +86,14 @@ func (srv *PBServer) Kill() {
 	// Your code here, if necessary
 	close(srv.prepChan)
 	srv.prepWait.Wait()
-	srv.log = make([]interface{}, 0)
+	srv.log = make([]*replication.Command, 0)
 }
 
 // Make is called by tester to create and initalize a PBServer
 // peers is the list of RPC endpoints to every server (including self)
 // me is this server's index into peers.
 // startingView is the initial view (set to be zero) that all servers start in
-func Make(peers []string, me int, startingView int) *PBServer {
+func Make(peers []replication.ReplicationClient, me int32, startingView int32) *PBServer {
 	srv := &PBServer{
 		peers:          peers,
 		me:             me,
@@ -103,8 +104,7 @@ func Make(peers []string, me int, startingView int) *PBServer {
 		prepWait:       &sync.WaitGroup{},
 	}
 	// all servers' log are initialized with a dummy command at index 0
-	var v interface{}
-	srv.log = append(srv.log, v)
+	srv.log = append(srv.log, &replication.Command{})
 
 	srv.prepWait.Add(1)
 	go srv.prepareProcessor()
@@ -127,16 +127,16 @@ func Make(peers []string, me int, startingView int) *PBServer {
 // A false return can be caused by a dead server, a live server that
 // can't be reached, a lost request, or a lost reply.
 func (srv *PBServer) sendPrepare(server int, args *replication.PrepareArgs, reply *replication.PrepareReply) bool {
-	ok := srv.peers[server].Call("PBServer.Prepare", args, reply)
-	return ok
+	reply, err := srv.peers[server].Prepare(context.Background(), args)
+	return err == nil
 }
 
 // determineNewViewLog is invoked to determine the log for the newView based on
 // the collection of replies for successful ViewChange requests.
 // if a quorum of successful replies exist, then ok is set to true.
 // otherwise, ok = false.
-func (srv *PBServer) determineNewViewLog(successReplies []*ViewChangeReply) (
-	ok bool, newViewLog []interface{}) {
+func (srv *PBServer) determineNewViewLog(successReplies []*replication.VCReply) (
+	ok bool, newViewLog []*replication.Command) {
 	// Your code here
 	newViewLog = srv.log
 	minView := srv.lastNormalView
@@ -150,7 +150,7 @@ func (srv *PBServer) determineNewViewLog(successReplies []*ViewChangeReply) (
 }
 
 // ViewChange is the RPC handler to process ViewChange RPC.
-func (srv *PBServer) ViewChange(args *ViewChangeArgs, reply *ViewChangeReply) {
+func (srv *PBServer) ViewChange(args *replication.VCArgs, reply *replication.VCReply) {
 	// Your code here
 	srv.mu.Lock()
 	defer srv.mu.Unlock()
@@ -166,7 +166,7 @@ func (srv *PBServer) ViewChange(args *ViewChangeArgs, reply *ViewChangeReply) {
 }
 
 // StartView is the RPC handler to process StartView RPC.
-func (srv *PBServer) StartView(args *StartViewArgs, reply *StartViewReply) {
+func (srv *PBServer) StartView(args *replication.SVArgs, reply *replication.SVReply) {
 	// Your code here
 	srv.mu.Lock()
 	defer srv.mu.Unlock()
