@@ -10,7 +10,7 @@
     "dist/subscription",
     "dist/user"
   ]
-  revision = "7cd60e7df82100e7b6c4470388170e7ad4824427"
+  revision = "87e2be376d2ca1662e470a7f3f874fd24f0a268c"
 
 [[projects]]
   name = "github.com/golang/protobuf"
@@ -22,8 +22,8 @@
     "ptypes/duration",
     "ptypes/timestamp"
   ]
-  revision = "925541529c1fa6821df4e44ce2723319eb2be768"
-  version = "v1.0.0"
+  revision = "b4deda0973fb4c70b50d226b1af49f3da59f5265"
+  version = "v1.1.0"
 
 [[projects]]
   branch = "master"
@@ -38,7 +38,7 @@
     "lex/httplex",
     "trace"
   ]
-  revision = "5f9ae10d9af5b1c89ae6904293b14b064d4ada23"
+  revision = "640f4622ab692b87c2f3a94265e6f579fe38263d"
 
 [[projects]]
   name = "golang.org/x/text"
@@ -65,7 +65,7 @@
   branch = "master"
   name = "google.golang.org/genproto"
   packages = ["googleapis/rpc/status"]
-  revision = "7fd901a49ba6a7f87732eb344f6e3c5b19d1b200"
+  revision = "86e600f69ee4704c6efbf6a2a40a5c10700e76c2"
 
 [[projects]]
   name = "google.golang.org/grpc"
@@ -102,6 +102,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "d8528b5ab8970f803ccf034b8597053721ff2144a243639419d95847d44e52b3"
+  inputs-digest = "e5d61433c9bda6280dceffd01cbbf123c2a8a6a630c8a9f3b494f31766e8cb2d"
   solver-name = "gps-cdcl"
   solver-version = 1
