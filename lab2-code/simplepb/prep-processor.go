@@ -6,7 +6,7 @@ import (
 )
 
 func (srv *PBServer) prepareProcessor() {
-	recvdArgs := make([]*CallbackArg, 0)
+	recvdArgs := make([]*callbackArg, 0)
 	log.Printf("Server %d: Beginning Central Prep Processor\n", srv.me)
 
 	for callArg := range srv.prepChan {
@@ -23,7 +23,7 @@ func (srv *PBServer) prepareProcessor() {
 			for _, arg := range recvdArgs {
 				arg.callback <- false
 			}
-			recvdArgs = make([]*CallbackArg, 0)
+			recvdArgs = make([]*callbackArg, 0)
 
 			srv.sendRecovery()
 

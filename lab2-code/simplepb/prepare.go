@@ -32,7 +32,7 @@ func (srv *PBServer) Prepare(args *replication.PrepareArgs, reply *replication.P
 	callback := make(chan bool)
 
 	log.Printf("Server %d: Prep sending {%d} to CPP\n", srv.me, args.Index)
-	srv.prepChan <- &CallbackArg{
+	srv.prepChan <- &callbackArg{
 		callback: callback,
 		args:     args,
 		handled:  false,

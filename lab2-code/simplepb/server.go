@@ -20,7 +20,7 @@ const (
 	RECOVERING
 )
 
-type CallbackArg struct {
+type callbackArg struct {
 	callback chan bool
 	args     *replication.PrepareArgs
 	handled  bool
@@ -39,7 +39,7 @@ type PBServer struct {
 	commitIndex int32                  // all log entries <= commitIndex are considered to have been committed.
 
 	// ... other state that you might need ...
-	prepChan chan *CallbackArg // Channel used by prep calls to communicate with the central prep-processor
+	prepChan chan *callbackArg // Channel used by prep calls to communicate with the central prep-processor
 	prepWait *sync.WaitGroup
 }
 
@@ -100,7 +100,7 @@ func Make(peers []replication.ReplicationClient, me int32, startingView int32) *
 		currentView:    startingView,
 		lastNormalView: startingView,
 		status:         NORMAL,
-		prepChan:       make(chan *CallbackArg),
+		prepChan:       make(chan *callbackArg),
 		prepWait:       &sync.WaitGroup{},
 	}
 	// all servers' log are initialized with a dummy command at index 0

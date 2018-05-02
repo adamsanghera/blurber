@@ -6,8 +6,6 @@ import (
 	"github.com/adamsanghera/blurber-protobufs/dist/replication"
 )
 
-// Some external oracle prompts the primary of the newView to
-// switch to the newView.
 // PromptViewChange just kicks start the view change protocol to move to the newView
 // It does not block waiting for the view change process to complete.
 func (srv *PBServer) PromptViewChange(newView int32) {
