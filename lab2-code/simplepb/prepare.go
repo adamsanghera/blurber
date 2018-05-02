@@ -1,9 +1,13 @@
 package simplepb
 
-import "log"
+import (
+	"log"
+
+	"github.com/adamsanghera/blurber-protobufs/dist/replication"
+)
 
 // Prepare is the RPC handler for the Prepare RPC
-func (srv *PBServer) Prepare(args *PrepareArgs, reply *PrepareReply) {
+func (srv *PBServer) Prepare(args *replication.PrepareArgs, reply *replication.PrepareReply) {
 	log.Printf("Server %d: Prep starting on {%d}\n", srv.me, args.Index)
 	// Your code here
 	// we need to pass in this prep to a centralized prepare-processor routine.

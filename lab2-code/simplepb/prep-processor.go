@@ -13,7 +13,7 @@ func (srv *PBServer) prepareProcessor() {
 		log.Printf("Server %d: CPP: Received arg {%d}\n", srv.me, callArg.args.Index)
 
 		// Check if recovery is necessary
-		if callArg.args.PrimaryCommit > len(srv.log) || srv.currentView < callArg.args.View {
+		if callArg.args.PrimaryCommit > int32(len(srv.log)) || srv.currentView < callArg.args.View {
 
 			log.Printf("Server %d: CPP: This log {%d} is behind primary {%d}!\n", srv.me, srv.commitIndex, callArg.args.PrimaryCommit)
 
@@ -40,7 +40,7 @@ func (srv *PBServer) prepareProcessor() {
 			log.Printf("Server %d: CPP: after sorting, backlog is %v\n", srv.me, recvdArgs[0].args.Index)
 			// While the youngest argument is the next index we're looking for
 			srv.mu.Lock()
-			for len(recvdArgs) > 0 && recvdArgs[0].args.Index == len(srv.log) {
+			for len(recvdArgs) > 0 && recvdArgs[0].args.Index == int32(len(srv.log)) {
 				// Append cmd to log, and send an okay to the prep RPC
 				log.Printf("Server %d: CPP: processing arg of idx %d\n", srv.me, recvdArgs[0].args.Index)
 				srv.log = append(srv.log, recvdArgs[0].args.Entry)

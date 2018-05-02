@@ -8,6 +8,8 @@ package simplepb
 
 import (
 	"sync"
+
+	"github.com/adamsanghera/blurber-protobufs/dist/replication"
 )
 
 // the 3 possible server status
@@ -19,77 +21,30 @@ const (
 
 type CallbackArg struct {
 	callback chan bool
-	args     *PrepareArgs
+	args     *replication.PrepareArgs
 	handled  bool
 }
 
 // PBServer defines the state of a replica server (either primary or backup)
 type PBServer struct {
-	mu             sync.Mutex // Lock to protect shared access to this peer's state
-	peers          []string   // RPC end points of all peers
-	me             int        // this peer's index into peers[]
-	currentView    int        // what this peer believes to be the current active view
-	status         int        // the server's current status (NORMAL, VIEWCHANGE or RECOVERING)
-	lastNormalView int        // the latest view which had a NORMAL status
+	mu             sync.Mutex                      // Lock to protect shared access to this peer's state
+	peers          []replication.ReplicationClient // RPC end points of all peers
+	me             int32                           // this peer's index into peers[]
+	currentView    int32                           // what this peer believes to be the current active view
+	status         int32                           // the server's current status (NORMAL, VIEWCHANGE or RECOVERING)
+	lastNormalView int32                           // the latest view which had a NORMAL status
 
 	log         []interface{} // the log of "commands"
-	commitIndex int           // all log entries <= commitIndex are considered to have been committed.
+	commitIndex int32         // all log entries <= commitIndex are considered to have been committed.
 
 	// ... other state that you might need ...
 	prepChan chan *CallbackArg // Channel used by prep calls to communicate with the central prep-processor
 	prepWait *sync.WaitGroup
 }
 
-// Prepare defines the arguments for the Prepare RPC
-// Note that all field names must start with a capital letter for an RPC args struct
-type PrepareArgs struct {
-	View          int         // the primary's current view
-	PrimaryCommit int         // the primary's commitIndex
-	Index         int         // the index position at which the log entry is to be replicated on backups
-	Entry         interface{} // the log entry to be replicated
-}
-
-// PrepareReply defines the reply for the Prepare RPC
-// Note that all field names must start with a capital letter for an RPC reply struct
-type PrepareReply struct {
-	View    int  // the backup's current view
-	Success bool // whether the Prepare request has been accepted or rejected
-}
-
-// RecoverArgs defined the arguments for the Recovery RPC
-type RecoveryArgs struct {
-	View   int // the view that the backup would like to synchronize with
-	Server int // the server sending the Recovery RPC (for debugging)
-}
-
-type RecoveryReply struct {
-	View          int           // the view of the primary
-	Entries       []interface{} // the primary's log including entries replicated up to and including the view.
-	PrimaryCommit int           // the primary's commitIndex
-	Success       bool          // whether the Recovery request has been accepted or rejected
-}
-
-type ViewChangeArgs struct {
-	View int // the new view to be changed into
-}
-
-type ViewChangeReply struct {
-	LastNormalView int           // the latest view which had a NORMAL status at the server
-	Log            []interface{} // the log at the server
-	Success        bool          // whether the ViewChange request has been accepted/rejected
-}
-
-type StartViewArgs struct {
-	View int           // the new view which has completed view-change
-	Log  []interface{} // the log associated with the new new
-}
-
-type StartViewReply struct {
-}
-
 // GetPrimary is an auxilary function that returns the server index of the
 // primary server given the view number (and the total number of replica servers)
-func GetPrimary(view int, nservers int) int {
+func GetPrimary(view int32, nservers int32) int32 {
 	return view % nservers
 }
 
@@ -171,7 +126,7 @@ func Make(peers []string, me int, startingView int) *PBServer {
 // Call() returns false. Thus Call() may not return for a while.
 // A false return can be caused by a dead server, a live server that
 // can't be reached, a lost request, or a lost reply.
-func (srv *PBServer) sendPrepare(server int, args *PrepareArgs, reply *PrepareReply) bool {
+func (srv *PBServer) sendPrepare(server int, args *replication.PrepareArgs, reply *replication.PrepareReply) bool {
 	ok := srv.peers[server].Call("PBServer.Prepare", args, reply)
 	return ok
 }

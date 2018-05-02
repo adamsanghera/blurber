@@ -1,9 +1,13 @@
 package simplepb
 
-import "log"
+import (
+	"log"
+
+	"github.com/adamsanghera/blurber-protobufs/dist/replication"
+)
 
 // Recovery is the RPC handler for the Recovery RPC
-func (srv *PBServer) Recovery(args *RecoveryArgs, reply *RecoveryReply) {
+func (srv *PBServer) Recovery(args *replication.RecoveryArgs, reply *replication.RecoveryReply) {
 	// Your code here
 	srv.mu.Lock()
 	log.Printf("PRIMARY: RECOVERY for %d: Launched\n", args.Server)
@@ -28,8 +32,8 @@ func (srv *PBServer) sendRecovery() {
 	srv.mu.Lock()
 	log.Printf("Server %d: CPP in REC: Beginning recovery, locked until completion...\n", srv.me)
 	srv.status = RECOVERING
-	rep := &RecoveryReply{}
-	arg := &RecoveryArgs{
+	rep := &replication.RecoveryReply{}
+	arg := &replication.RecoveryArgs{
 		View:   srv.currentView,
 		Server: srv.me,
 	}
