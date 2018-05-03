@@ -38,9 +38,8 @@ type PBServer struct {
 	log         []*replication.Command // the log of "commands"
 	commitIndex int32                  // all log entries <= commitIndex are considered to have been committed.
 
-	// ... other state that you might need ...
-	prepChan chan *callbackArg // Channel used by prep calls to communicate with the central prep-processor
-	prepWait *sync.WaitGroup
+	prepChan             chan *callbackArg // Channel used by prep calls to communicate with the central prep-processor
+	serviceReportChannel chan int          // Channel used by service-discovery routine to maintain peers list.
 }
 
 // GetPrimary is an auxilary function that returns the server index of the
@@ -80,15 +79,6 @@ func (srv *PBServer) GetEntryAtIndex(index int) (ok bool, command interface{}) {
 	return false, command
 }
 
-// Kill is called by tester to clean up (e.g. stop the current server)
-// before moving on to the next test
-func (srv *PBServer) Kill() {
-	// Your code here, if necessary
-	close(srv.prepChan)
-	srv.prepWait.Wait()
-	srv.log = make([]*replication.Command, 0)
-}
-
 // Make is called by tester to create and initalize a PBServer
 // peers is the list of RPC endpoints to every server (including self)
 // me is this server's index into peers.
@@ -101,12 +91,10 @@ func Make(peers []replication.ReplicationClient, me int32, startingView int32) *
 		lastNormalView: startingView,
 		status:         NORMAL,
 		prepChan:       make(chan *callbackArg),
-		prepWait:       &sync.WaitGroup{},
 	}
 	// all servers' log are initialized with a dummy command at index 0
 	srv.log = append(srv.log, &replication.Command{})
 
-	srv.prepWait.Add(1)
 	go srv.prepareProcessor()
 
 	// Your other initialization code here, if there's any
@@ -129,51 +117,4 @@ func Make(peers []replication.ReplicationClient, me int32, startingView int32) *
 func (srv *PBServer) sendPrepare(server int, args *replication.PrepareArgs, reply *replication.PrepareReply) bool {
 	reply, err := srv.peers[server].Prepare(context.Background(), args)
 	return err == nil
-}
-
-// determineNewViewLog is invoked to determine the log for the newView based on
-// the collection of replies for successful ViewChange requests.
-// if a quorum of successful replies exist, then ok is set to true.
-// otherwise, ok = false.
-func (srv *PBServer) determineNewViewLog(successReplies []*replication.VCReply) (
-	ok bool, newViewLog []*replication.Command) {
-	// Your code here
-	newViewLog = srv.log
-	minView := srv.lastNormalView
-	for _, v := range successReplies {
-		if v.LastNormalView < minView {
-			newViewLog = v.Log
-			minView = v.LastNormalView
-		}
-	}
-	return ok, newViewLog
-}
-
-// ViewChange is the RPC handler to process ViewChange RPC.
-func (srv *PBServer) ViewChange(args *replication.VCArgs, reply *replication.VCReply) {
-	// Your code here
-	srv.mu.Lock()
-	defer srv.mu.Unlock()
-	if args.View > srv.currentView {
-		srv.currentView = args.View
-		srv.status = VIEWCHANGE
-		reply.Success = true
-		reply.Log = srv.log
-		reply.LastNormalView = srv.lastNormalView
-	} else {
-		reply.Success = false
-	}
-}
-
-// StartView is the RPC handler to process StartView RPC.
-func (srv *PBServer) StartView(args *replication.SVArgs, reply *replication.SVReply) {
-	// Your code here
-	srv.mu.Lock()
-	defer srv.mu.Unlock()
-	if srv.currentView < args.View {
-		srv.currentView = args.View
-		srv.log = args.Log
-		srv.status = NORMAL
-		srv.lastNormalView = srv.currentView
-	}
 }

@@ -52,6 +52,6 @@ func (srv *PBServer) prepareProcessor() {
 			srv.mu.Unlock()
 		}
 	}
+
 	log.Printf("Server %d: CPP: received close... shutting down\n", srv.me)
-	srv.prepWait.Done()
 }

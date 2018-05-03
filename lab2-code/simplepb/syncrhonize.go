@@ -7,26 +7,39 @@ import (
 	"github.com/adamsanghera/blurber-protobufs/dist/replication"
 )
 
+// synchronize is a background-routine, used to
+// synchronize is a composite of two functions.
+// 1. A receiver function, that listens for responses to prepare RPCs
+// 2. A sender function, which propagates the new to peers
 func (srv *PBServer) syncrhonize(index int32, view int32, commit int32, command *replication.Command) {
-	outbox := make(chan bool)
+	outbox := make(chan *replication.PrepareReply)
 
 	go func() {
 		log.Printf("PRIMARY: ACC for %d: Launch\n", index)
-		// Start with 1, because the master has prepared it.
+
+		// positivePreps starts at 1, because the master already accepts it
 		positivePreps := 1
 		negativePreps := 0
 
-		// Continue to receive messages until we get all callbacks
+		// Continue to wait on messages until all callbacks reply
 		for (positivePreps + negativePreps) < len(srv.peers) {
-			isGood := <-outbox
-			log.Printf("PRIMARY: ACC for %d: received response num %d: %v\n", index, positivePreps+negativePreps, isGood)
-			if isGood {
+			reply := <-outbox
+
+			log.Printf("PRIMARY: ACC for %d: received response num %d: %v\n", index, positivePreps+negativePreps, reply.Success)
+
+			if reply.Success {
 				positivePreps++
 			} else {
-				negativePreps++
+				// Out of sync with network, need to recover
+				if srv.currentView < reply.View {
+					srv.sendRecovery()
+				} else {
+					// failed to connect, or anomalous reject, but still in sync – keep going
+					negativePreps++
+				}
 			}
 
-			// If positive prepare messages are in majority.
+			// Positive prepares are majority.
 			if positivePreps > len(srv.peers)/2 {
 				// Committed
 				srv.mu.Lock()
@@ -39,17 +52,16 @@ func (srv *PBServer) syncrhonize(index int32, view int32, commit int32, command 
 		}
 
 		log.Printf("PRIMARY: ACC for %d: All messages received. Closing outbox...\n", index)
-
-		// At this point, all preparers have sent their message
 		close(outbox)
+
+		// If we failed to reach consensus, but have not fallen behind the view, we retry synchronizing.
 		if !(positivePreps > negativePreps) {
 			srv.syncrhonize(index, view, commit, command)
 		}
 	}()
 
+	// Spawn a routine for every peer, not including self
 	for i := range srv.peers {
-		// log.Printf("PRIMARY: Woohoo view %d, for PRIMARY of %d\n", view, i, len(srv.peers))
-		// log.Printf("PRIMARY: Result of GetPrimary: %d", GetPrimary(srv.currentView, len(srv.peers)))
 		if GetPrimary(srv.currentView, int32(len(srv.peers))) != int32(i) {
 			go func(backup replication.ReplicationClient, backupNum int) {
 				pArgs := &replication.PrepareArgs{
@@ -58,15 +70,16 @@ func (srv *PBServer) syncrhonize(index int32, view int32, commit int32, command 
 					Index:         index,
 					Entry:         command,
 				}
-				pReply := &replication.PrepareReply{}
+
 				log.Printf("PRIMARY: PREP for %d -> %d: Sending RPC\n", index, backupNum)
 				pReply, err := backup.Prepare(context.Background(), pArgs)
-				log.Printf("PRIMARY: PREP for %d -> %d: Response recvd: {%v}\n", index, backupNum, err == nil)
+
 				if err != nil {
-					outbox <- false
+					log.Printf("PRIMARY: PREP for %d -> %d: No response\n", index, backupNum)
+					outbox <- &replication.PrepareReply{View: -1, Success: false}
 				} else {
-					log.Printf("PRIMARY: PREP for %d -> %d: Forwarding to ACC\n", index, backupNum)
-					outbox <- pReply.Success
+					log.Printf("PRIMARY: PREP for %d -> %d: Good response\n", index, backupNum)
+					outbox <- pReply
 				}
 			}(srv.peers[i], i)
 		}

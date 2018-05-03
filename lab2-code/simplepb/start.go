@@ -6,8 +6,8 @@ import (
 	"github.com/adamsanghera/blurber-protobufs/dist/replication"
 )
 
-// Start is the entry point to our replication engine
-func (srv *PBServer) Start(command *replication.Command) (
+// Replicate is the entry point to our replication engine
+func (srv *PBServer) Replicate(command *replication.Command) (
 	index int32, view int32, ok bool) {
 	srv.mu.Lock()
 
@@ -26,7 +26,7 @@ func (srv *PBServer) Start(command *replication.Command) (
 	view = srv.currentView
 	commit := srv.commitIndex
 
-	log.Printf("PRIMARY: Start RPC releasing lock, with state values {index: %d} {view: %d} {commit: %d}\n", index, view, commit)
+	log.Printf("PRIMARY: Replicate releasing lock, with state values {index: %d} {view: %d} {commit: %d}\n", index, view, commit)
 	srv.mu.Unlock()
 
 	go srv.syncrhonize(index, view, commit, command)

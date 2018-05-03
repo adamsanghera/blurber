@@ -61,7 +61,6 @@ func (srv *PBServer) PromptViewChange(newView int32) {
 		// send StartView to all servers including myself
 		for i := 0; i < len(srv.peers); i++ {
 			go func(server int) {
-				// fmt.Printf("node-%d sending StartView v=%d to node-%d\n", srv.me, svArgs.View, server)
 				srv.peers[server].StartView(context.Background(), svArgs)
 			}(i)
 		}
