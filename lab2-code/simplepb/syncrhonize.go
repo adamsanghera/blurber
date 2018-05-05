@@ -38,21 +38,21 @@ func (srv *PBServer) syncrhonize(index int32, view int32, commit int32, command 
 					negativePreps++
 				}
 			}
-
-			// Positive prepares are majority.
-			if positivePreps > len(srv.peers)/2 {
-				// Committed
-				srv.mu.Lock()
-				if srv.commitIndex < index {
-					log.Printf("PRIMARY: ACC for %d: Updating commit idx to %d\n", index, index)
-					srv.commitIndex = index
-				}
-				srv.mu.Unlock()
-			}
 		}
 
-		log.Printf("PRIMARY: ACC for %d: All messages received. Closing outbox...\n", index)
+		log.Printf("PRIMARY: ACC for %d: Done receiving messages. Closing outbox...\n", index)
 		close(outbox)
+
+		// Positive prepares are majority.
+		if positivePreps > len(srv.peers)/2 {
+			// Committed
+			srv.mu.Lock()
+			if srv.commitIndex < index {
+				log.Printf("PRIMARY: ACC for %d: Updating commit idx to %d\n", index, index)
+				srv.commitIndex = index
+			}
+			srv.mu.Unlock()
+		}
 
 		// If we failed to reach consensus, but have not fallen behind the view, we retry synchronizing.
 		if !(positivePreps > negativePreps) {

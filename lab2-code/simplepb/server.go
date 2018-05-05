@@ -7,7 +7,6 @@ package simplepb
 //
 
 import (
-	"context"
 	"log"
 	"net"
 	"sync"
@@ -149,6 +148,7 @@ func NewReplicationDaemon(thisAddress string, leaderAddress string) *PBServer {
 		if err != nil {
 			panic(err)
 		}
+		srv.me = 1
 	} else {
 		log.Printf("ReplicationD: Spawning as leader")
 		err := srv.connectPeer(thisAddress)
@@ -171,22 +171,4 @@ func NewReplicationDaemon(thisAddress string, leaderAddress string) *PBServer {
 	}
 
 	return srv
-}
-
-// exmple code to send an AppendEntries RPC to a server.
-// server is the index of the target server in srv.peers[].
-// expects RPC arguments in args.
-// The RPC library fills in *reply with RPC reply, so caller should pass &reply.
-// the types of the args and reply passed to Call() must be
-// the same as the types of the arguments declared in the
-// handler function (including whether they are pointers).
-//
-// Call() sends a request and waits for a reply. If a reply arrives
-// within a timeout interval, Call() returns true; otherwise
-// Call() returns false. Thus Call() may not return for a while.
-// A false return can be caused by a dead server, a live server that
-// can't be reached, a lost request, or a lost reply.
-func (srv *PBServer) sendPrepare(server int, args *replication.PrepareArgs, reply *replication.PrepareReply) bool {
-	reply, err := srv.peers[server].Prepare(context.Background(), args)
-	return err == nil
 }

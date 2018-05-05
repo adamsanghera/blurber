@@ -1,8 +1,9 @@
 package simplepb
 
 import (
-	"context"
 	"log"
+
+	"golang.org/x/net/context"
 
 	"github.com/adamsanghera/blurber-protobufs/dist/replication"
 )
@@ -13,36 +14,34 @@ func (srv *PBServer) Recovery(ctx context.Context, args *replication.RecoveryArg
 	srv.mu.Lock()
 	defer srv.mu.Unlock()
 
-	addr, ok := ctx.Value("address").(string)
-	if !ok {
-		// do smth
-		log.Printf("RECOVERY: Insufficient context in recovery request... no address provided")
-	}
-
-	known := false
-	for _, a := range srv.peerAddresses {
-		known = known || a == addr
-	}
-
-	// New machine, needs to store new connection
-	if !known {
-		err := srv.connectPeer(addr)
-		if err != nil {
-			log.Printf("Failed to make client connection with peer")
+	peerIdx := -1
+	for i, a := range srv.peerAddresses {
+		if a == args.Address {
+			peerIdx = i
 		}
 	}
 
-	log.Printf("PRIMARY: RECOVERY for %d: Launched\n", args.Server)
+	// Received contact from a new machine, need to store new connection
+	if peerIdx == -1 {
+		log.Printf("PRIMARY: Recovery for %s: Bootstrapping", args.Address)
+		err := srv.connectPeer(args.Address)
+		if err != nil {
+			log.Printf("Failed to make client connection with peer")
+		}
+		peerIdx = len(srv.peerAddresses) - 1
+	}
 
 	if args.View != srv.currentView {
-		log.Printf("PRIMARY: RECOVERY for %d: View out of sync; this %d vs req %d\n", args.Server, srv.currentView, args.View)
+		log.Printf("PRIMARY: RECOVERY for %s: View out of sync; this %d vs req %d\n", args.Address, srv.currentView, args.View)
 	} else {
-		log.Printf("PRIMARY: RECOVERY for %d: Acking positively\n", args.Server)
+		log.Printf("PRIMARY: RECOVERY for %s: Acking positively\n", args.Address)
 		return &replication.RecoveryReply{
+			View:          srv.currentView,
 			Entries:       srv.log,
 			PrimaryCommit: srv.commitIndex,
-			View:          srv.currentView,
 			Success:       true,
+			Peers:         srv.peerAddresses,
+			NewIdentity:   int32(peerIdx),
 		}, nil
 	}
 	return &replication.RecoveryReply{}, nil
@@ -55,15 +54,14 @@ func (srv *PBServer) sendRecovery() {
 	log.Printf("Server %d: CPP in REC: Beginning recovery, locked until completion...\n", srv.me)
 	srv.status = RECOVERING
 	arg := &replication.RecoveryArgs{
-		View:   srv.currentView,
-		Server: srv.me,
+		View:    srv.currentView,
+		Address: srv.peerAddresses[srv.me],
 	}
 
 	for !good {
-		log.Printf("Server %d: CPP in REC: Sending recovery request\n", srv.me)
-		ctx := context.WithValue(context.Background(), "address", srv.peerAddresses[srv.me])
+		log.Printf("Server %d: CPP in REC: Sending recovery request from addr %s\n", srv.me, srv.peerAddresses[srv.me])
 
-		rep, err := srv.peers[GetPrimary(srv.currentView, int32(len(srv.peers)))].Recovery(ctx, arg)
+		rep, err := srv.peers[GetPrimary(srv.currentView, int32(len(srv.peers)))].Recovery(context.Background(), arg)
 		good = err == nil
 
 		if good {
@@ -75,6 +73,14 @@ func (srv *PBServer) sendRecovery() {
 				srv.commitIndex = rep.PrimaryCommit
 				srv.currentView = rep.View
 				srv.status = NORMAL
+				srv.me = rep.NewIdentity
+
+				// Re-forge connections to other Replication Daemons.
+				srv.peerAddresses = make([]string, 0)
+				srv.peers = make([]replication.ReplicationClient, 0)
+				for _, addr := range rep.Peers {
+					srv.connectPeer(addr)
+				}
 			}
 		}
 	}

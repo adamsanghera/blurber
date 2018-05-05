@@ -2,6 +2,7 @@ package simplepb
 
 import (
 	"context"
+	"log"
 	"testing"
 	"time"
 
@@ -74,19 +75,76 @@ func TestNewReplicationDaemon(t *testing.T) {
 				},
 			})
 
-			time.Sleep(2 * time.Second)
+			time.Sleep(1 * time.Second)
 
 			if len(srv.log) != 4 {
 				t.Fatalf("Failed to store commands")
 			}
 
 			follower := NewReplicationDaemon(tt.args.thisAddress, tt.args.leaderAddress)
+			follower2 := NewReplicationDaemon("127.0.0.1:4002", tt.args.leaderAddress)
 
-			time.Sleep(2 * time.Second)
+			time.Sleep(1 * time.Second)
 
 			if len(follower.log) != len(srv.log) {
+				t.Fatalf("Follower failed to receive replicated log")
+			}
+
+			if len(follower2.peerAddresses) != len(srv.peerAddresses) {
+				t.Fatalf("Failed to replicate peer list:\n\t{%v}\n\tvs\n\t{%v}", follower2.peerAddresses, srv.peerAddresses)
+			}
+
+			client.Replicate(context.Background(), &replication.Command{
+				Cmd: &any.Any{
+					TypeUrl: "Sub",
+					Value:   []byte("adam"),
+				},
+			})
+			client.Replicate(context.Background(), &replication.Command{
+				Cmd: &any.Any{
+					TypeUrl: "Sub",
+					Value:   []byte("bob"),
+				},
+			})
+			client.Replicate(context.Background(), &replication.Command{
+				Cmd: &any.Any{
+					TypeUrl: "Sub",
+					Value:   []byte("bob"),
+				},
+			})
+
+			time.Sleep(1 * time.Second)
+
+			if len(follower2.log) != len(srv.log) {
+				log.Printf("{%v}", follower2.log)
+				log.Printf("{%v}", srv.log)
 				t.Fatalf("Failed to replicate log to follower")
 			}
+
+			if srv.peerAddresses[srv.me] != tt.args.leaderAddress {
+				t.Fatalf("Mistaken identity %d of %v", srv.me, srv.peerAddresses)
+			}
+
+			if follower.peerAddresses[follower.me] != tt.args.thisAddress {
+				t.Fatalf("Mistaken identity %d of %v", follower.me, follower.peerAddresses)
+			}
+
+			if follower2.peerAddresses[follower2.me] != "127.0.0.1:4002" {
+				t.Fatalf("Mistaken identity %d of %v", follower2.me, follower2.peerAddresses)
+			}
+
+			if srv.me != GetPrimary(srv.currentView, int32(len(srv.peerAddresses))) {
+				t.Fatalf("Leader does not think she is the primary")
+			}
+
+			if follower.me == GetPrimary(follower.currentView, int32(len(follower.peerAddresses))) {
+				t.Fatalf("Follower thinks she is primary")
+			}
+
+			if follower2.me == GetPrimary(follower2.currentView, int32(len(follower2.peerAddresses))) {
+				t.Fatalf("Follower thinks she is primary")
+			}
+
 		})
 	}
 }
