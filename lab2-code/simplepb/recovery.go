@@ -5,7 +5,6 @@ import (
 	"log"
 
 	"github.com/adamsanghera/blurber-protobufs/dist/replication"
-	"google.golang.org/grpc"
 )
 
 // Recovery is the RPC handler for the Recovery RPC
@@ -20,19 +19,17 @@ func (srv *PBServer) Recovery(ctx context.Context, args *replication.RecoveryArg
 		log.Printf("RECOVERY: Insufficient context in recovery request... no address provided")
 	}
 
-	idx, ok := ctx.Value("index").(int32)
-	if !ok {
-		// do smth
-		log.Printf("RECOVERY: Insufficient context in recovery request... no index provided")
+	known := false
+	for _, a := range srv.peerAddresses {
+		known = known || a == addr
 	}
 
-	// New machine, needs to be bootstrapped
-	if idx == -1 {
-		connection, err := grpc.Dial(addr, grpc.WithInsecure())
+	// New machine, needs to store new connection
+	if !known {
+		err := srv.connectPeer(addr)
 		if err != nil {
-			log.Printf("RECOVERY: Unable to establish a new client connection")
+			log.Printf("Failed to make client connection with peer")
 		}
-		srv.peers = append(srv.peers, replication.NewReplicationClient(connection))
 	}
 
 	log.Printf("PRIMARY: RECOVERY for %d: Launched\n", args.Server)
@@ -64,7 +61,9 @@ func (srv *PBServer) sendRecovery() {
 
 	for !good {
 		log.Printf("Server %d: CPP in REC: Sending recovery request\n", srv.me)
-		rep, err := srv.peers[GetPrimary(srv.currentView, int32(len(srv.peers)))].Recovery(context.Background(), arg)
+		ctx := context.WithValue(context.Background(), "address", srv.peerAddresses[srv.me])
+
+		rep, err := srv.peers[GetPrimary(srv.currentView, int32(len(srv.peers)))].Recovery(ctx, arg)
 		good = err == nil
 
 		if good {

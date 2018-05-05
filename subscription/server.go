@@ -5,17 +5,22 @@ import (
 
 	"github.com/adamsanghera/blurber-protobufs/dist/common"
 	subpb "github.com/adamsanghera/blurber-protobufs/dist/subscription"
+	"github.com/adamsanghera/blurber/lab2-code/simplepb"
 )
 
 type LedgerServer struct {
 	ledger *LocalLedger
 	addr   string
+
+	replicationDaemon simplepb.PBServer
 }
 
 func NewLedgerServer(addr string) *LedgerServer {
 	return &LedgerServer{
 		ledger: NewLocalLedger(),
 		addr:   addr,
+
+		replicationDaemon: simplepb.Make()
 	}
 }
 
@@ -34,7 +39,7 @@ func (ls *LedgerServer) DeletePresenceOf(ctx context.Context, in *common.UserID)
 	return &common.Empty{}, nil
 }
 
-func (ls *LedgerServer) GetLeadersOf(ctx context.Context, in *common.UserID) (*subpb.Leaders, error) {
+func (ls *LedgerServer) GetLeadersOf(ctx context.Context, in *common.UserID) (*subpb.Users, error) {
 	ret, err := ls.ledger.GetLeaders(in.UserID)
 
 	retList := make([]*common.UserID, len(ret))
@@ -43,7 +48,7 @@ func (ls *LedgerServer) GetLeadersOf(ctx context.Context, in *common.UserID) (*s
 		retList[k] = &common.UserID{UserID: ret[k]}
 	}
 
-	return &subpb.Leaders{
-		Leaders: retList,
+	return &subpb.Users{
+		Users: retList,
 	}, err
 }

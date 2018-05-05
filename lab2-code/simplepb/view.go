@@ -1,25 +1,32 @@
 package simplepb
 
-import "github.com/adamsanghera/blurber-protobufs/dist/replication"
+import (
+	"context"
+
+	"github.com/adamsanghera/blurber-protobufs/dist/replication"
+)
 
 // ViewChange is the RPC handler to process ViewChange RPC.
-func (srv *PBServer) ViewChange(args *replication.VCArgs, reply *replication.VCReply) {
+func (srv *PBServer) ViewChange(ctx context.Context, args *replication.VCArgs) (*replication.VCReply, error) {
 	// Your code here
 	srv.mu.Lock()
 	defer srv.mu.Unlock()
 	if args.View > srv.currentView {
 		srv.currentView = args.View
 		srv.status = VIEWCHANGE
-		reply.Success = true
-		reply.Log = srv.log
-		reply.LastNormalView = srv.lastNormalView
-	} else {
-		reply.Success = false
+		return &replication.VCReply{
+			Success:        true,
+			Log:            srv.log,
+			LastNormalView: srv.lastNormalView,
+		}, nil
 	}
+	return &replication.VCReply{
+		Success: false,
+	}, nil
 }
 
 // StartView is the RPC handler to process StartView RPC.
-func (srv *PBServer) StartView(args *replication.SVArgs, reply *replication.SVReply) {
+func (srv *PBServer) StartView(ctx context.Context, args *replication.SVArgs) (*replication.SVReply, error) {
 	// Your code here
 	srv.mu.Lock()
 	defer srv.mu.Unlock()
@@ -29,6 +36,8 @@ func (srv *PBServer) StartView(args *replication.SVArgs, reply *replication.SVRe
 		srv.status = NORMAL
 		srv.lastNormalView = srv.currentView
 	}
+
+	return &replication.SVReply{}, nil
 }
 
 // determineNewViewLog is invoked to determine the log for the newView based on

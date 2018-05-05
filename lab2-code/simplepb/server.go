@@ -8,9 +8,14 @@ package simplepb
 
 import (
 	"context"
+	"log"
+	"net"
 	"sync"
+	"time"
 
 	"github.com/adamsanghera/blurber-protobufs/dist/replication"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 )
 
 // the 3 possible server status
@@ -28,8 +33,9 @@ type callbackArg struct {
 
 // PBServer defines the state of a replica server (either primary or backup)
 type PBServer struct {
-	mu             sync.Mutex                      // Lock to protect shared access to this peer's state
+	mu             *sync.Mutex                     // Lock to protect shared access to this peer's state
 	peers          []replication.ReplicationClient // RPC end points of all peers
+	peerAddresses  []string                        // Addresses of all peers
 	me             int32                           // this peer's index into peers[]
 	currentView    int32                           // what this peer believes to be the current active view
 	status         int32                           // the server's current status (NORMAL, VIEWCHANGE or RECOVERING)
@@ -38,8 +44,7 @@ type PBServer struct {
 	log         []*replication.Command // the log of "commands"
 	commitIndex int32                  // all log entries <= commitIndex are considered to have been committed.
 
-	prepChan             chan *callbackArg // Channel used by prep calls to communicate with the central prep-processor
-	serviceReportChannel chan int          // Channel used by service-discovery routine to maintain peers list.
+	prepChan chan *callbackArg // Channel used by prep calls to communicate with the central prep-processor
 }
 
 // GetPrimary is an auxilary function that returns the server index of the
@@ -57,6 +62,20 @@ func (srv *PBServer) IsCommitted(index int32) (committed bool) {
 		return true
 	}
 	return false
+}
+
+func (srv *PBServer) connectPeer(addr string) error {
+	conn, err := grpc.Dial(addr, grpc.WithInsecure())
+	if err != nil {
+		log.Printf("ReplicationD: Failed to connect to the Replication Daemon at %s", addr)
+		return err
+	}
+	self := replication.NewReplicationClient(conn)
+	log.Printf("ReplicationD: Successfully connected to peer at %s", addr)
+
+	srv.peers = append(srv.peers, self)
+	srv.peerAddresses = append(srv.peerAddresses, addr)
+	return nil
 }
 
 // ViewStatus is called by tester to find out the current view of this server
@@ -79,25 +98,78 @@ func (srv *PBServer) GetEntryAtIndex(index int) (ok bool, command interface{}) {
 	return false, command
 }
 
-// Make is called by tester to create and initalize a PBServer
-// peers is the list of RPC endpoints to every server (including self)
-// me is this server's index into peers.
-// startingView is the initial view (set to be zero) that all servers start in
-func Make(peers []replication.ReplicationClient, me int32, startingView int32) *PBServer {
+func runGRPCServer(thisAddress string, srv *PBServer) {
+	log.Printf("ReplicationD: Registering to listen on (%s)", thisAddress)
+	lis, err := net.Listen("tcp", thisAddress)
+	if err != nil {
+		panic(err)
+	}
+	s := grpc.NewServer()
+	replication.RegisterReplicationServer(s, srv)
+	reflection.Register(s)
+
+	log.Printf("ReplicationD: Registered successfully (%s)", thisAddress)
+
+	if err = s.Serve(lis); err != nil {
+		panic("ReplicationD: Failed to start gRPC server")
+	}
+}
+
+// NewReplicationDaemon spawns a new replication daemon.
+// By default, the daemon starts as a follower in search of a leader to recover from
+//
+func NewReplicationDaemon(thisAddress string, leaderAddress string) *PBServer {
 	srv := &PBServer{
-		peers:          peers,
-		me:             me,
-		currentView:    startingView,
-		lastNormalView: startingView,
+		mu:             &sync.Mutex{},
+		peers:          make([]replication.ReplicationClient, 0),
+		peerAddresses:  make([]string, 0),
+		me:             0,
+		currentView:    0,
 		status:         NORMAL,
+		lastNormalView: 0,
+		log:            make([]*replication.Command, 0),
+		commitIndex:    0,
 		prepChan:       make(chan *callbackArg),
 	}
-	// all servers' log are initialized with a dummy command at index 0
+
+	// Init log
 	srv.log = append(srv.log, &replication.Command{})
 
+	log.Printf("Spwaning replication processor")
 	go srv.prepareProcessor()
 
-	// Your other initialization code here, if there's any
+	// Initting daemon connections
+	if thisAddress != leaderAddress {
+		log.Printf("ReplicationD: Spawning as follower")
+		err := srv.connectPeer(leaderAddress)
+		if err != nil {
+			panic(err)
+		}
+		err = srv.connectPeer(thisAddress)
+		if err != nil {
+			panic(err)
+		}
+	} else {
+		log.Printf("ReplicationD: Spawning as leader")
+		err := srv.connectPeer(thisAddress)
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	time.Sleep(time.Millisecond * 50)
+
+	// Registering server
+	go runGRPCServer(thisAddress, srv)
+	log.Printf("ReplicationD: Successfully created at %s", thisAddress)
+
+	time.Sleep(time.Millisecond * 50)
+
+	if leaderAddress != thisAddress {
+		log.Printf("ReplicationD: Follower entering recovery mode")
+		go srv.sendRecovery()
+	}
+
 	return srv
 }
 

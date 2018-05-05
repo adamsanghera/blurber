@@ -1,13 +1,14 @@
 package simplepb
 
 import (
+	"context"
 	"log"
 
 	"github.com/adamsanghera/blurber-protobufs/dist/replication"
 )
 
 // Prepare is the RPC handler for the Prepare RPC
-func (srv *PBServer) Prepare(args *replication.PrepareArgs, reply *replication.PrepareReply) {
+func (srv *PBServer) Prepare(ctx context.Context, args *replication.PrepareArgs) (*replication.PrepareReply, error) {
 	log.Printf("Server %d: Prep starting on {%d}\n", srv.me, args.Index)
 	// Your code here
 	// we need to pass in this prep to a centralized prepare-processor routine.
@@ -24,9 +25,10 @@ func (srv *PBServer) Prepare(args *replication.PrepareArgs, reply *replication.P
 	//     It cleans up the hash map entry, and then returns the prep-success message.
 
 	if srv.status != NORMAL {
-		reply.Success = false
-		reply.View = srv.currentView
-		return
+		return &replication.PrepareReply{
+			Success: false,
+			View:    srv.currentView,
+		}, nil
 	}
 
 	callback := make(chan bool)
@@ -38,12 +40,14 @@ func (srv *PBServer) Prepare(args *replication.PrepareArgs, reply *replication.P
 		handled:  false,
 	}
 
-	reply.Success = <-callback
-	reply.View = srv.currentView
+	reply := &replication.PrepareReply{
+		Success: <-callback,
+		View:    srv.currentView,
+	}
 
 	log.Printf("Server %d: Prep ack {%v} from CPP for message of idx {%d}, returning\n", srv.me, reply.Success, args.Index)
 
 	close(callback)
 
-	return
+	return reply, nil
 }
