@@ -33,19 +33,15 @@
 
 These will be managed in branches:
 
-1. `protobufs` [X]
-
-2. `split` [x]
-
-    - `split-blurb` [X]
-    - `split-user` [x]
-    - `split-subscription` [X]
-
-3. `safe` [X]
-
-    - `safe-blurb` [X]
-    - `safe-user` [X]
-    - `safe-subscription` [X]
+1. [X] `protobufs`
+1. [X] `split`
+    - [X] `split-blurb`
+    - [X] `split-user`
+    - [X] `split-subscription`
+1. `safe`
+    - [X] `safe-blurb`
+    - [X] `safe-user`
+    - [X] `safe-subscription`
 
 ## Roadmap for replication
 
@@ -59,6 +55,11 @@ These will be managed in branches:
 1. [X] Graft replication daemon onto subscription database, so that it makes use of replication
     - [X] Background thread for processing the buffered commit channel
     - [X] No state changes outside of background thread
+    - [X] Unit tests proving it all works
+1. [ ] Node failure
+    - [ ] Proving failover security at the daemon level, with unit tests proving efficacy
+    - [ ] Proving failover security at the backend-tier level, with unit tests proving efficacy
+    - [ ] Integrating leader failover security into the front-end, maintaining a peers list of backend services, to pivot between on lack of contact
 
 ## How to run
 
