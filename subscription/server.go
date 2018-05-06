@@ -1,11 +1,13 @@
 package subscription
 
 import (
+	"github.com/golang/protobuf/ptypes"
 	"golang.org/x/net/context"
 
 	"github.com/adamsanghera/blurber-protobufs/dist/common"
 	subpb "github.com/adamsanghera/blurber-protobufs/dist/subscription"
 	rep "github.com/adamsanghera/blurber/replication-daemon"
+	"github.com/golang/protobuf/proto"
 )
 
 type LedgerServer struct {
@@ -14,6 +16,24 @@ type LedgerServer struct {
 	internalAddr string
 
 	replicationDaemon *rep.PBServer
+}
+
+func (ls *LedgerServer) ProcessCommands() {
+	for cmd := range ls.replicationDaemon.CommitChan {
+		switch cmd.Cmd.TypeUrl {
+		case "Add":
+			var sub *subpb.Subscription
+			err := ptypes.UnmarshalAny(cmd.Cmd, sub)
+			if err != nil {
+				panic("Failed to unmarshal command")
+			}
+			break
+		case "Delete":
+			break
+		case "DeletePresenceOf":
+			break
+		}
+	}
 }
 
 func NewLedgerServer(addr string, internalAddr string) *LedgerServer {
@@ -27,7 +47,12 @@ func NewLedgerServer(addr string, internalAddr string) *LedgerServer {
 }
 
 func (ls *LedgerServer) Add(ctx context.Context, in *subpb.Subscription) (*common.Empty, error) {
-	ls.ledger.AddSub(in.Follower.UserID, in.Leader.UserID)
+	cmd, err := proto.Marshal(in)
+	if err != nil {
+		panic(err)
+	}
+	ls.replicationDaemon.Replicate()
+	// ls.ledger.AddSub(in.Follower.UserID, in.Leader.UserID)
 	return &common.Empty{}, nil
 }
 

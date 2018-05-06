@@ -1,4 +1,4 @@
-package simplepb
+package pbdaemon
 
 import (
 	"log"
@@ -48,7 +48,7 @@ func (srv *PBServer) prepareProcessor() {
 				srv.log = append(srv.log, recvdArgs[0].args.Entry)
 				if srv.commitIndex != recvdArgs[0].args.PrimaryCommit {
 					for idx := srv.commitIndex + 1; idx <= recvdArgs[0].args.PrimaryCommit; idx++ {
-						srv.commitChan <- srv.log[idx]
+						srv.CommitChan <- srv.log[idx]
 					}
 				}
 				srv.commitIndex = recvdArgs[0].args.PrimaryCommit

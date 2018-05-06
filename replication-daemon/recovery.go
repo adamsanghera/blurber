@@ -1,4 +1,4 @@
-package simplepb
+package pbdaemon
 
 import (
 	"log"
@@ -99,7 +99,7 @@ func (srv *PBServer) sendRecovery() {
 
 				// Throw all of the new commands down the hatch
 				for idx := int32(1); idx <= srv.commitIndex; idx++ {
-					srv.commitChan <- srv.log[idx]
+					srv.CommitChan <- srv.log[idx]
 				}
 			} else {
 				log.Printf("Server %d: CPP in REC: Got a response from non-primary!  Redirecting to primary...\n", srv.me)

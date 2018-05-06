@@ -1,4 +1,4 @@
-package simplepb
+package pbdaemon
 
 import (
 	"context"

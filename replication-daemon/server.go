@@ -1,4 +1,4 @@
-package simplepb
+package pbdaemon
 
 //
 // This is a outline of primary-backup replication based on a simplifed version of Viewstamp replication.
@@ -41,7 +41,7 @@ type PBServer struct {
 
 	log         []*replication.Command // the log of "commands"
 	commitIndex int32                  // all log entries <= commitIndex are considered to have been committed.
-	commitChan  chan *replication.Command
+	CommitChan  chan *replication.Command
 
 	prepChan chan *callbackArg // Channel used by prep calls to communicate with the central prep-processor
 }
@@ -128,7 +128,7 @@ func NewReplicationDaemon(thisAddress string, leaderAddress string) *PBServer {
 		lastNormalView: 0,
 		log:            make([]*replication.Command, 0),
 		commitIndex:    0,
-		commitChan:     make(chan *replication.Command, 1000),
+		CommitChan:     make(chan *replication.Command, 1000),
 		prepChan:       make(chan *callbackArg),
 	}
 

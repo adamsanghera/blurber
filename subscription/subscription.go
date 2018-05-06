@@ -5,13 +5,6 @@ import (
 	"sync"
 )
 
-// Ledger is the interface for a service that maintains a
-// record of follower-leader relationships in a social graph.
-type Ledger interface {
-	AddSub(followerID int32, leadearID int32)
-	RemoveSub(followerID int32, leadearID int32)
-}
-
 // LocalLedger implements the Ledger interface,
 // by maintaining an in-memory record of follower-leader relationships.
 type LocalLedger struct {

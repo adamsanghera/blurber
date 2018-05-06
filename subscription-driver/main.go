@@ -31,7 +31,7 @@ func main() {
 
 	log.Printf("SubServer: Derived address: (%s)", addr)
 
-	srv := subscription.NewLedgerServer(addr)
+	srv := subscription.NewLedgerServer(addr, addr[:len(addr)-1]+"1")
 
 	lis, err := net.Listen("tcp", addr)
 	if err != nil {

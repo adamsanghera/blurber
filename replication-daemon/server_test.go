@@ -1,4 +1,4 @@
-package simplepb
+package pbdaemon
 
 import (
 	"context"
@@ -146,15 +146,15 @@ func TestNewReplicationDaemon(t *testing.T) {
 				t.Fatalf("Follower thinks she is primary")
 			}
 
-			if int(follower.commitIndex) != len(follower.commitChan) {
-				t.Fatalf("Follower failed to apply committed indices.  Commit channel is of length %d, should be %d", len(follower.commitChan), follower.commitIndex)
+			if int(follower.commitIndex) != len(follower.CommitChan) {
+				t.Fatalf("Follower failed to apply committed indices.  Commit channel is of length %d, should be %d", len(follower.CommitChan), follower.commitIndex)
 			}
 
-			if int(srv.commitIndex) != len(srv.commitChan) {
-				t.Fatalf("Leader failed to apply committed indices.  Commit channel is of length %d, should be %d", len(srv.commitChan), srv.commitIndex)
+			if int(srv.commitIndex) != len(srv.CommitChan) {
+				t.Fatalf("Leader failed to apply committed indices.  Commit channel is of length %d, should be %d", len(srv.CommitChan), srv.commitIndex)
 			}
 
-			log.Printf("Number of commits backed up in leader is %d", len(srv.commitChan))
+			log.Printf("Number of commits backed up in leader is %d", len(srv.CommitChan))
 		})
 	}
 }
