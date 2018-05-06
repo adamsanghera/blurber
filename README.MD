@@ -49,11 +49,16 @@ These will be managed in branches:
 
 ## Roadmap for replication
 
-- [ ] Create a general package for replicating a log with the RAFT protocol
-
-  - [ ] Leader election
-  - [ ] Command intake
-  - [ ] Log replication
+1. [X] Repurpose code from Lab 2 to work in this project
+    - [X] Replace labrpc code with gRPC
+      - [X] protobuf spec
+    - [X] Add service/leader discovery to the protocol, instead of static configurations
+    - [X] Write unit tests demonstrating functional replication
+    - [X] Add a buffered channel for exporting newly committed commands, to be applied elsewhere
+      - [X] Integrate this feature with the recovery calls
+1. [X] Graft replication daemon onto subscription database, so that it makes use of replication
+    - [X] Background thread for processing the buffered commit channel
+    - [X] No state changes outside of background thread
 
 ## How to run
 
