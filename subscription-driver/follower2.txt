@@ -1,0 +1,20 @@
+2018/05/06 15:49:25 SubServer: Derived address: (:6020)
+2018/05/06 15:49:25 SUB-LEDGER: Initializing
+2018/05/06 15:49:25 New Daemon created at :6021, pointing at 127.0.0.1:6001
+2018/05/06 15:49:25 ReplicationD: Spawning as follower
+2018/05/06 15:49:25 ReplicationD: Successfully connected to peer at 127.0.0.1:6001
+2018/05/06 15:49:25 PRIMARY: Sending peer list to &{0xc4200e8f00}
+2018/05/06 15:49:25 ReplicationD: Successfully connected to peer at :6021
+2018/05/06 15:49:25 Spwaning replication processor
+2018/05/06 15:49:25 ReplicationD: Follower entering recovery mode
+2018/05/06 15:49:25 Server 1: Beginning Central Prep Processor
+2018/05/06 15:49:25 SubServer: Starting on (:6020)
+2018/05/06 15:49:25 ReplicationD: Registering to listen on (:6021)
+2018/05/06 15:49:25 ReplicationD: Registered successfully (:6021)
+2018/05/06 15:49:25 Server 1: CPP in REC: Beginning recovery, locked until completion...
+2018/05/06 15:49:25 Server 1: CPP in REC: Sending recovery request from addr :6021
+2018/05/06 15:49:25 SUB-SERVER: Processing Command loop begins..
+2018/05/06 15:49:25 Server 1: CPP in REC: Got a response from primary!
+2018/05/06 15:49:25 Server 1: CPP in REC: Accepted for recovery!
+2018/05/06 15:49:25 ReplicationD: Successfully connected to peer at :6001
+2018/05/06 15:49:25 ReplicationD: Successfully connected to peer at :6021

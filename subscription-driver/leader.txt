@@ -1,0 +1,25 @@
+2018/05/06 15:49:25 SubServer: Derived address: (:6000)
+2018/05/06 15:49:25 SUB-LEDGER: Initializing
+2018/05/06 15:49:25 New Daemon created at :6001, pointing at :6001
+2018/05/06 15:49:25 ReplicationD: Spawning as leader
+2018/05/06 15:49:25 ReplicationD: Successfully connected to peer at :6001
+2018/05/06 15:49:25 PRIMARY: Sending peer list to &{0xc4200c4f00}
+2018/05/06 15:49:25 Spwaning replication processor
+2018/05/06 15:49:25 Server 0: Beginning Central Prep Processor
+2018/05/06 15:49:25 SubServer: Starting on (:6000)
+2018/05/06 15:49:25 SUB-SERVER: Processing Command loop begins..
+2018/05/06 15:49:25 ReplicationD: Registering to listen on (:6001)
+2018/05/06 15:49:25 ReplicationD: Registered successfully (:6001)
+2018/05/06 15:49:25 PRIMARY: Recovery for :6021: Bootstrapping
+2018/05/06 15:49:25 ReplicationD: Successfully connected to peer at :6021
+2018/05/06 15:49:25 PRIMARY: Sending peer list to &{0xc4200c4f00}
+2018/05/06 15:49:25 PRIMARY: Sending peer list to &{0xc4200c5180}
+2018/05/06 15:49:25 PRIMARY: Recovery for :6021: Sending reply
+2018/05/06 15:49:25 PRIMARY: RECOVERY for :6021: Acking positively
+2018/05/06 15:49:25 PRIMARY: Recovery for :6011: Bootstrapping
+2018/05/06 15:49:25 ReplicationD: Successfully connected to peer at :6011
+2018/05/06 15:49:25 PRIMARY: Sending peer list to &{0xc4200c4f00}
+2018/05/06 15:49:25 PRIMARY: Sending peer list to &{0xc4200c5180}
+2018/05/06 15:49:25 PRIMARY: Sending peer list to &{0xc420278000}
+2018/05/06 15:49:25 PRIMARY: Recovery for :6011: Sending reply
+2018/05/06 15:49:25 PRIMARY: RECOVERY for :6011: Acking positively

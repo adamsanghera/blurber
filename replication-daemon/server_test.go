@@ -144,7 +144,8 @@ func TestNewReplicationDaemon(t *testing.T) {
 				t.Fatalf("Leader failed to apply committed indices.  Commit channel is of length %d, should be %d", len(srv.CommitChan), srv.commitIndex)
 			}
 
-			log.Printf("Number of commits backed up in leader is %d", len(srv.CommitChan))
+			// log.Printf("Number of commits backed up in leader is %d", len(srv.CommitChan))
+			log.Printf("Leader: %v\n1: %v\n2: %v", srv.peerAddresses, follower.peerAddresses, follower2.peerAddresses)
 		})
 	}
 }

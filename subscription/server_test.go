@@ -54,7 +54,7 @@ func TestLedgerServer_Add(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ls := NewLedgerServer("127.0.0.1:4000", "127.0.0.1:4001")
+			ls := NewLedgerServer("127.0.0.1:4000", "127.0.0.1:4001", "127.0.0.1:4001")
 
 			for _, sub := range tt.args.in {
 				ls.Add(context.Background(), sub)

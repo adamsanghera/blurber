@@ -73,7 +73,9 @@ func (srv *PBServer) sendRecovery() {
 	for !good {
 		log.Printf("Server %d: CPP in REC: Sending recovery request from addr %s\n", srv.me, srv.peerAddresses[srv.me])
 
-		rep, err := srv.peers[GetPrimary(srv.currentView, int32(len(srv.peers)))].Recovery(context.Background(), arg)
+		leaderIdx := GetPrimary(srv.currentView, int32(len(srv.peers)))
+
+		rep, err := srv.peers[leaderIdx].Recovery(context.Background(), arg)
 		good = (err == nil)
 
 		// Made contact with sooooomebody

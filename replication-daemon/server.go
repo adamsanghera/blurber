@@ -52,17 +52,6 @@ func GetPrimary(view int32, nservers int32) int32 {
 	return view % nservers
 }
 
-// IsCommitted is called by tester to check whether an index position
-// has been considered committed by this server
-func (srv *PBServer) IsCommitted(index int32) (committed bool) {
-	srv.mu.Lock()
-	defer srv.mu.Unlock()
-	if srv.commitIndex >= index {
-		return true
-	}
-	return false
-}
-
 func (srv *PBServer) connectPeer(addr string) error {
 	conn, err := grpc.Dial(addr, grpc.WithInsecure())
 	if err != nil {
@@ -74,27 +63,15 @@ func (srv *PBServer) connectPeer(addr string) error {
 
 	srv.peers = append(srv.peers, self)
 	srv.peerAddresses = append(srv.peerAddresses, addr)
-	return nil
-}
 
-// ViewStatus is called by tester to find out the current view of this server
-// and whether this view has a status of NORMAL.
-func (srv *PBServer) ViewStatus() (currentView int32, statusIsNormal bool) {
-	srv.mu.Lock()
-	defer srv.mu.Unlock()
-	return srv.currentView, srv.status == NORMAL
-}
-
-// GetEntryAtIndex is called by tester to return the command replicated at
-// a specific log index. If the server's log is shorter than "index", then
-// ok = false, otherwise, ok = true
-func (srv *PBServer) GetEntryAtIndex(index int) (ok bool, command interface{}) {
-	srv.mu.Lock()
-	defer srv.mu.Unlock()
-	if len(srv.log) > index {
-		return true, srv.log[index]
+	if GetPrimary(srv.currentView, int32(len(srv.peerAddresses))) == srv.me {
+		for _, client := range srv.peers {
+			log.Printf("PRIMARY: Sending peer list to %v", client)
+			// client.SharePeers(srv.peerAddresses)
+		}
 	}
-	return false, command
+
+	return nil
 }
 
 func runGRPCServer(thisAddress string, srv *PBServer) {
@@ -135,6 +112,8 @@ func NewReplicationDaemon(thisAddress string, leaderAddress string) *PBServer {
 	srv.mu.Lock()
 	defer srv.mu.Unlock()
 
+	log.Printf("New Daemon created at %s, pointing at %s", thisAddress, leaderAddress)
+
 	// Init log
 	srv.log = append(srv.log, &replication.Command{})
 
@@ -145,17 +124,14 @@ func NewReplicationDaemon(thisAddress string, leaderAddress string) *PBServer {
 		if err != nil {
 			panic(err)
 		}
-		err = srv.connectPeer(thisAddress)
-		if err != nil {
-			panic(err)
-		}
 		srv.me = 1
 	} else {
 		log.Printf("ReplicationD: Spawning as leader")
-		err := srv.connectPeer(thisAddress)
-		if err != nil {
-			panic(err)
-		}
+	}
+
+	err := srv.connectPeer(thisAddress)
+	if err != nil {
+		panic(err)
 	}
 
 	log.Printf("Spwaning replication processor")

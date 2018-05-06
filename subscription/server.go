@@ -16,17 +16,20 @@ import (
 )
 
 type LedgerServer struct {
-	ledger       *LocalLedger
-	addr         string
-	internalAddr string
+	ledger                   *LocalLedger
+	addr                     string
+	replicationAdddress      string
+	replicationLeaderAddress string
 
 	replicationDaemon *rep.PBServer
 }
 
 func (ls *LedgerServer) ProcessCommands() {
 	log.Printf("SUB-SERVER: Processing Command loop begins..")
+
 	for cmd := range ls.replicationDaemon.CommitChan {
 		log.Printf("Received cmd %v", cmd)
+
 		switch cmd.Cmd.TypeUrl {
 		case "sub/add/" + proto.MessageName(&subpb.Subscription{}):
 			var sub subpb.Subscription
@@ -59,16 +62,22 @@ func (ls *LedgerServer) ProcessCommands() {
 	}
 }
 
-func NewLedgerServer(addr string, internalAddr string) *LedgerServer {
+// NewLedgerServer creates a new ledger server, supported by a command replication daemon
+func NewLedgerServer(addr string, replicationAddress string, replicationLeaderAddress string) *LedgerServer {
+	// Register proto types
 	proto.RegisterType((*subpb.Subscription)(nil), "subpb.Subscription")
 	proto.RegisterType((*common.UserID)(nil), "common.UserID")
-	ls := &LedgerServer{
-		ledger:       NewLocalLedger(),
-		addr:         addr,
-		internalAddr: internalAddr,
 
-		replicationDaemon: rep.NewReplicationDaemon(internalAddr, internalAddr),
+	// Init the ledger server and daemon
+	ls := &LedgerServer{
+		ledger:                   NewLocalLedger(),
+		addr:                     addr,
+		replicationAdddress:      replicationAddress,
+		replicationLeaderAddress: replicationLeaderAddress,
+		replicationDaemon:        rep.NewReplicationDaemon(replicationAddress, replicationLeaderAddress),
 	}
+
+	// Spawn command processor routine, that feeds off the Replication Daemon
 	go ls.ProcessCommands()
 	return ls
 }
@@ -86,8 +95,7 @@ func (ls *LedgerServer) Add(ctx context.Context, in *subpb.Subscription) (*commo
 		},
 	}
 
-	ls.replicationDaemon.Replicate(cmd)
-	return &common.Empty{}, nil
+	return &common.Empty{}, ls.replicationDaemon.Replicate(cmd)
 }
 
 func (ls *LedgerServer) Delete(ctx context.Context, in *subpb.Subscription) (*common.Empty, error) {
@@ -103,8 +111,7 @@ func (ls *LedgerServer) Delete(ctx context.Context, in *subpb.Subscription) (*co
 		},
 	}
 
-	ls.replicationDaemon.Replicate(cmd)
-	return &common.Empty{}, nil
+	return &common.Empty{}, ls.replicationDaemon.Replicate(cmd)
 }
 
 func (ls *LedgerServer) DeletePresenceOf(ctx context.Context, in *common.UserID) (*common.Empty, error) {
@@ -120,8 +127,7 @@ func (ls *LedgerServer) DeletePresenceOf(ctx context.Context, in *common.UserID)
 		},
 	}
 
-	ls.replicationDaemon.Replicate(cmd)
-	return &common.Empty{}, nil
+	return &common.Empty{}, ls.replicationDaemon.Replicate(cmd)
 }
 
 func (ls *LedgerServer) GetLeadersOf(ctx context.Context, in *common.UserID) (*subpb.Users, error) {

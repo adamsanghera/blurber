@@ -6,7 +6,7 @@ import (
 	"github.com/adamsanghera/blurber-protobufs/dist/replication"
 )
 
-// PromptViewChange just kicks start the view change protocol to move to the newView
+// PromptViewChange inits the view change protocol to move to the newView
 // It does not block waiting for the view change process to complete.
 func (srv *PBServer) PromptViewChange(newView int32) {
 	srv.mu.Lock()
@@ -26,7 +26,6 @@ func (srv *PBServer) PromptViewChange(newView int32) {
 	for i := 0; i < len(srv.peers); i++ {
 		go func(server int) {
 			reply, err := srv.peers[server].ViewChange(context.Background(), vcArgs)
-			// fmt.Printf("node-%d (nReplies %d) received reply ok=%v reply=%v\n", srv.me, nReplies, ok, r.reply)
 			if err == nil {
 				vcReplyChan <- reply
 			} else {
