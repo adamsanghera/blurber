@@ -44,6 +44,8 @@ type PBServer struct {
 	CommitChan  chan *replication.Command
 
 	prepChan chan *callbackArg // Channel used by prep calls to communicate with the central prep-processor
+
+	grpcServer *grpc.Server
 }
 
 // GetPrimary is an auxilary function that returns the server index of the
@@ -80,15 +82,52 @@ func runGRPCServer(thisAddress string, srv *PBServer) {
 	if err != nil {
 		panic(err)
 	}
-	s := grpc.NewServer()
-	replication.RegisterReplicationServer(s, srv)
-	reflection.Register(s)
+	srv.grpcServer = grpc.NewServer()
+	replication.RegisterReplicationServer(srv.grpcServer, srv)
+	reflection.Register(srv.grpcServer)
 
 	log.Printf("ReplicationD: Registered successfully (%s)", thisAddress)
 
-	if err = s.Serve(lis); err != nil {
+	if err = srv.grpcServer.Serve(lis); err != nil {
 		panic("ReplicationD: Failed to start gRPC server")
 	}
+}
+
+// Home grown find method for slice since go standard lib doesn't have one
+// Maybe this is why: https://github.com/golang/go/wiki/InterfaceSlice
+func findSlice(addr string, allAddrs []string) int {
+	for i, e := range allAddrs {
+		if e == addr {
+			return i
+		}
+	}
+	return -1
+
+}
+
+func (srv *PBServer) disconnectPeer(addr string) error {
+	// do we really need to disconnect client conn?
+
+	// Get index i of the peer addr to be disconnected
+	i := findSlice(addr, srv.peerAddresses)
+	srv.peers = append(srv.peers[:i], srv.peers[i+1:]...)
+	srv.peerAddresses = append(srv.peerAddresses[:i], srv.peerAddresses[i+1:]...)
+
+	return nil
+}
+
+// StopGRPCServer is used in unit testing to simulate server failure
+func (srv *PBServer) StopGRPCServer() {
+	log.Printf("Stopping gRPC server %v", srv.me)
+
+	// Disconnect peers
+	for i, addr := range srv.peerAddresses {
+		if int32(i) != srv.me {
+			srv.disconnectPeer(addr)
+		}
+	}
+
+	srv.grpcServer.Stop()
 }
 
 // NewReplicationDaemon spawns a new replication daemon.
