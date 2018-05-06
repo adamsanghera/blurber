@@ -1,1 +1,1 @@
-kill `ps | grep main | cut -d ' ' -f 2`
+kill `ps | grep main | cut -d ' ' -f 1`

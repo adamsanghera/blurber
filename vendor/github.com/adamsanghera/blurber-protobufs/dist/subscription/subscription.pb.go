@@ -94,6 +94,7 @@ type SubscriptionDBClient interface {
 	Add(ctx context.Context, in *Subscription, opts ...grpc.CallOption) (*common.Empty, error)
 	Delete(ctx context.Context, in *Subscription, opts ...grpc.CallOption) (*common.Empty, error)
 	DeletePresenceOf(ctx context.Context, in *common.UserID, opts ...grpc.CallOption) (*common.Empty, error)
+
 	// Non-replicated RPCs
 	GetLeadersOf(ctx context.Context, in *common.UserID, opts ...grpc.CallOption) (*Users, error)
 	GetFollowersOf(ctx context.Context, in *common.UserID, opts ...grpc.CallOption) (*Users, error)

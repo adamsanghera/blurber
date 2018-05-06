@@ -54,3 +54,17 @@ func (ls *LedgerServer) GetLeadersOf(ctx context.Context, in *common.UserID) (*s
 		Users: retList,
 	}, err
 }
+
+func (ls *LedgerServer) GetFollowersOf(ctx context.Context, in *common.UserID) (*subpb.Users, error) {
+	ret, err := ls.ledger.GetFollowers(in.UserID)
+
+	retList := make([]*common.UserID, len(ret))
+
+	for k := range ret {
+		retList[k] = &common.UserID{UserID: ret[k]}
+	}
+
+	return &subpb.Users{
+		Users: retList,
+	}, err
+}

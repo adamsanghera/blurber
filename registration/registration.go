@@ -210,7 +210,7 @@ func (ll *LocalLedger) Remove(uname string) error {
 	}
 
 	ll.userSet.Delete(uname)
-	ll.userSet.Delete(id)
+	ll.userID.Delete(id)
 	ll.pwdMap.Delete(id)
 	ll.tokenMap.Delete(id)
 	return nil

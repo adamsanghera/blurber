@@ -33,13 +33,28 @@ func RemoveAcc(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userDB.Delete(ctx, &user.Username{Username: username})
+	_, err = userDB.Delete(ctx, &user.Username{Username: username})
+	if err != nil {
+		panic(err)
+	}
 
-	subDB.DeletePresenceOf(ctx, usrID)
+	followers, err := subDB.GetFollowersOf(ctx, usrID)
+	if err != nil {
+		panic(err)
+	}
+
+	_, err = subDB.DeletePresenceOf(ctx, usrID)
+	if err != nil {
+		panic(err)
+	}
 
 	_, err = blurbDB.DeleteHistoryOf(ctx, usrID)
 	if err != nil {
 		panic(err)
+	}
+
+	for _, followerID := range followers.Users {
+		blurbDB.InvalidateFeedCache(ctx, followerID)
 	}
 
 	http.Redirect(w, r, "/login/", http.StatusFound)
