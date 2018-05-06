@@ -14,6 +14,14 @@ func (srv *PBServer) Recovery(ctx context.Context, args *replication.RecoveryArg
 	srv.mu.Lock()
 	defer srv.mu.Unlock()
 
+	if GetPrimary(srv.currentView, int32(len(srv.peerAddresses))) != srv.me {
+		return &replication.RecoveryReply{
+			View:    srv.currentView,
+			Peers:   srv.peerAddresses,
+			Success: false,
+		}, nil
+	}
+
 	peerIdx := -1
 	for i, a := range srv.peerAddresses {
 		if a == args.Address {
@@ -49,6 +57,8 @@ func (srv *PBServer) Recovery(ctx context.Context, args *replication.RecoveryArg
 	return &replication.RecoveryReply{}, nil
 }
 
+// sendRecovery is a helper function for initiating a daemon's recovery.
+// It triggers the Recovery RPC, targeting the primary.
 func (srv *PBServer) sendRecovery() {
 	good := false
 
@@ -64,11 +74,14 @@ func (srv *PBServer) sendRecovery() {
 		log.Printf("Server %d: CPP in REC: Sending recovery request from addr %s\n", srv.me, srv.peerAddresses[srv.me])
 
 		rep, err := srv.peers[GetPrimary(srv.currentView, int32(len(srv.peers)))].Recovery(context.Background(), arg)
-		good = err == nil
+		good = (err == nil)
 
+		// Made contact with sooooomebody
 		if good {
 			log.Printf("Server %d: CPP in REC: Got a response from primary!\n", srv.me)
 			good = rep.Success
+
+			// Made contact with the one true leader
 			if good {
 				log.Printf("Server %d: CPP in REC: Accepted for recovery!\n", srv.me)
 				srv.log = rep.Entries
@@ -84,9 +97,15 @@ func (srv *PBServer) sendRecovery() {
 					srv.connectPeer(addr)
 				}
 
+				// Throw all of the new commands down the hatch
 				for idx := int32(1); idx <= srv.commitIndex; idx++ {
 					srv.commitChan <- srv.log[idx]
 				}
+			} else {
+				log.Printf("Server %d: CPP in REC: Got a response from non-primary!  Redirecting to primary...\n", srv.me)
+				// This should redirect us to the One True Leader
+				srv.peerAddresses = rep.Peers
+				srv.currentView = rep.View
 			}
 		}
 	}
