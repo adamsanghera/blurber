@@ -23,7 +23,7 @@ func (srv *PBServer) Replicate(cmd *replication.Command) error {
 	srv.log = append(srv.log, cmd)
 	commit := srv.commitIndex
 
-	log.Printf("PRIMARY: Replicate releasing lock, with state values {index: %d} {view: %d} {commit: %d}\n", reply.Index, reply.View, commit)
+	log.Printf("PRIMARY: Replicate releasing lock, with state values {index: %d} {view: %d} {commit: %d}\n", int32(len(srv.log)-1), srv.currentView, commit)
 
 	go srv.syncrhonize(int32(len(srv.log)-1), srv.currentView, commit, cmd)
 

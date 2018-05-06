@@ -11,7 +11,7 @@
     "dist/subscription",
     "dist/user"
   ]
-  revision = "87fc8eb9675f46b470ecd29fd90c8a5cca16ee3b"
+  revision = "3c42710065dea3561e940aa2088f50928715c121"
 
 [[projects]]
   name = "github.com/golang/protobuf"
