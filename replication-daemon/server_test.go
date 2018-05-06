@@ -1,7 +1,6 @@
 package pbdaemon
 
 import (
-	"context"
 	"log"
 	"testing"
 	"time"
@@ -9,7 +8,6 @@ import (
 	"github.com/golang/protobuf/ptypes/any"
 
 	"github.com/adamsanghera/blurber-protobufs/dist/replication"
-	"google.golang.org/grpc"
 )
 
 func TestNewReplicationDaemon(t *testing.T) {
@@ -48,27 +46,19 @@ func TestNewReplicationDaemon(t *testing.T) {
 				t.Fatalf("Incorrect peers list size")
 			}
 
-			// Create a replication client
-			conn, err := grpc.Dial(tt.args.leaderAddress, grpc.WithInsecure())
-			if err != nil {
-				t.Fatalf("ReplicationD: Failed to connect to the Replication Daemon at %s", tt.args.leaderAddress)
-
-			}
-			client := replication.NewReplicationClient(conn)
-
-			client.Replicate(context.Background(), &replication.Command{
+			srv.Replicate(&replication.Command{
 				Cmd: &any.Any{
 					TypeUrl: "Add",
 					Value:   []byte("adam"),
 				},
 			})
-			client.Replicate(context.Background(), &replication.Command{
+			srv.Replicate(&replication.Command{
 				Cmd: &any.Any{
 					TypeUrl: "Add",
 					Value:   []byte("bob"),
 				},
 			})
-			client.Replicate(context.Background(), &replication.Command{
+			srv.Replicate(&replication.Command{
 				Cmd: &any.Any{
 					TypeUrl: "Add",
 					Value:   []byte("bob"),
@@ -95,19 +85,19 @@ func TestNewReplicationDaemon(t *testing.T) {
 				t.Fatalf("Failed to replicate peer list:\n\t{%v}\n\tvs\n\t{%v}", follower2.peerAddresses, srv.peerAddresses)
 			}
 
-			client.Replicate(context.Background(), &replication.Command{
+			srv.Replicate(&replication.Command{
 				Cmd: &any.Any{
 					TypeUrl: "Sub",
 					Value:   []byte("adam"),
 				},
 			})
-			client.Replicate(context.Background(), &replication.Command{
+			srv.Replicate(&replication.Command{
 				Cmd: &any.Any{
 					TypeUrl: "Sub",
 					Value:   []byte("bob"),
 				},
 			})
-			client.Replicate(context.Background(), &replication.Command{
+			srv.Replicate(&replication.Command{
 				Cmd: &any.Any{
 					TypeUrl: "Sub",
 					Value:   []byte("bob"),

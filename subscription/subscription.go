@@ -87,6 +87,15 @@ func (ll *LocalLedger) RemoveUser(uid int32) {
 		ll.RemoveSub(uid, leader) // removes from both lists
 	}
 
+	followers, err := ll.GetFollowers(uid)
+	if err != nil {
+		panic("SUB-LEDGER can't get leaders")
+	}
+
+	for _, follower := range followers {
+		ll.RemoveSub(follower, uid)
+	}
+
 	// Delete leader and follower lists for uid
 	ll.followLead.Delete(uid)
 	ll.leadFollow.Delete(uid)
