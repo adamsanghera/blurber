@@ -10,7 +10,6 @@ import (
 	"log"
 	"net"
 	"sync"
-	"time"
 
 	"github.com/adamsanghera/blurber-protobufs/dist/replication"
 	"google.golang.org/grpc"
@@ -42,6 +41,7 @@ type PBServer struct {
 
 	log         []*replication.Command // the log of "commands"
 	commitIndex int32                  // all log entries <= commitIndex are considered to have been committed.
+	commitChan  chan *replication.Command
 
 	prepChan chan *callbackArg // Channel used by prep calls to communicate with the central prep-processor
 }
@@ -115,8 +115,8 @@ func runGRPCServer(thisAddress string, srv *PBServer) {
 }
 
 // NewReplicationDaemon spawns a new replication daemon.
-// By default, the daemon starts as a follower in search of a leader to recover from
-//
+// If thisAddress and leaderAddress are not the same,
+// then the new daemon will start in recovery mode.
 func NewReplicationDaemon(thisAddress string, leaderAddress string) *PBServer {
 	srv := &PBServer{
 		mu:             &sync.Mutex{},
@@ -128,14 +128,15 @@ func NewReplicationDaemon(thisAddress string, leaderAddress string) *PBServer {
 		lastNormalView: 0,
 		log:            make([]*replication.Command, 0),
 		commitIndex:    0,
+		commitChan:     make(chan *replication.Command, 1000),
 		prepChan:       make(chan *callbackArg),
 	}
 
+	srv.mu.Lock()
+	defer srv.mu.Unlock()
+
 	// Init log
 	srv.log = append(srv.log, &replication.Command{})
-
-	log.Printf("Spwaning replication processor")
-	go srv.prepareProcessor()
 
 	// Initting daemon connections
 	if thisAddress != leaderAddress {
@@ -157,13 +158,11 @@ func NewReplicationDaemon(thisAddress string, leaderAddress string) *PBServer {
 		}
 	}
 
-	time.Sleep(time.Millisecond * 50)
+	log.Printf("Spwaning replication processor")
+	go srv.prepareProcessor()
 
 	// Registering server
 	go runGRPCServer(thisAddress, srv)
-	log.Printf("ReplicationD: Successfully created at %s", thisAddress)
-
-	time.Sleep(time.Millisecond * 50)
 
 	if leaderAddress != thisAddress {
 		log.Printf("ReplicationD: Follower entering recovery mode")

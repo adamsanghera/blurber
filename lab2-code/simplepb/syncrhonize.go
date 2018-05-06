@@ -7,7 +7,7 @@ import (
 	"github.com/adamsanghera/blurber-protobufs/dist/replication"
 )
 
-// synchronize is a background-routine, used to
+// synchronize is a background-routine, used to synchronize follower logs with the leader log
 // synchronize is a composite of two functions.
 // 1. A receiver function, that listens for responses to prepare RPCs
 // 2. A sender function, which propagates the new to peers
@@ -32,7 +32,7 @@ func (srv *PBServer) syncrhonize(index int32, view int32, commit int32, command 
 			} else {
 				// Out of sync with network, need to recover
 				if srv.currentView < reply.View {
-					srv.sendRecovery()
+					defer srv.sendRecovery()
 				} else {
 					// failed to connect, or anomalous reject, but still in sync – keep going
 					negativePreps++
@@ -44,15 +44,15 @@ func (srv *PBServer) syncrhonize(index int32, view int32, commit int32, command 
 		close(outbox)
 
 		// Positive prepares are majority.
+		srv.mu.Lock()
 		if positivePreps > len(srv.peers)/2 {
 			// Committed
-			srv.mu.Lock()
 			if srv.commitIndex < index {
 				log.Printf("PRIMARY: ACC for %d: Updating commit idx to %d\n", index, index)
 				srv.commitIndex = index
 			}
-			srv.mu.Unlock()
 		}
+		srv.mu.Unlock()
 
 		// If we failed to reach consensus, but have not fallen behind the view, we retry synchronizing.
 		if !(positivePreps > negativePreps) {
@@ -61,6 +61,7 @@ func (srv *PBServer) syncrhonize(index int32, view int32, commit int32, command 
 	}()
 
 	// Spawn a routine for every peer, not including self
+	srv.mu.Lock()
 	for i := range srv.peers {
 		if GetPrimary(srv.currentView, int32(len(srv.peers))) != int32(i) {
 			go func(backup replication.ReplicationClient, backupNum int) {
@@ -76,7 +77,7 @@ func (srv *PBServer) syncrhonize(index int32, view int32, commit int32, command 
 
 				if err != nil {
 					log.Printf("PRIMARY: PREP for %d -> %d: No response\n", index, backupNum)
-					outbox <- &replication.PrepareReply{View: -1, Success: false}
+					outbox <- &replication.PrepareReply{Success: false}
 				} else {
 					log.Printf("PRIMARY: PREP for %d -> %d: Good response\n", index, backupNum)
 					outbox <- pReply
@@ -84,4 +85,5 @@ func (srv *PBServer) syncrhonize(index int32, view int32, commit int32, command 
 			}(srv.peers[i], i)
 		}
 	}
+	srv.mu.Unlock()
 }

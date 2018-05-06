@@ -82,12 +82,13 @@ func TestNewReplicationDaemon(t *testing.T) {
 			}
 
 			follower := NewReplicationDaemon(tt.args.thisAddress, tt.args.leaderAddress)
+			time.Sleep(1 * time.Second)
 			follower2 := NewReplicationDaemon("127.0.0.1:4002", tt.args.leaderAddress)
 
-			time.Sleep(1 * time.Second)
+			time.Sleep(2 * time.Second)
 
 			if len(follower.log) != len(srv.log) {
-				t.Fatalf("Follower failed to receive replicated log")
+				t.Fatalf("Follower failed to receive replicated log\n%v\nvs\n%v", follower.log, srv.log)
 			}
 
 			if len(follower2.peerAddresses) != len(srv.peerAddresses) {
@@ -115,8 +116,8 @@ func TestNewReplicationDaemon(t *testing.T) {
 
 			time.Sleep(1 * time.Second)
 
-			if len(follower2.log) != len(srv.log) {
-				log.Printf("{%v}", follower2.log)
+			if len(follower.log) != len(srv.log) {
+				log.Printf("{%v}", follower.log)
 				log.Printf("{%v}", srv.log)
 				t.Fatalf("Failed to replicate log to follower")
 			}
@@ -143,6 +144,14 @@ func TestNewReplicationDaemon(t *testing.T) {
 
 			if follower2.me == GetPrimary(follower2.currentView, int32(len(follower2.peerAddresses))) {
 				t.Fatalf("Follower thinks she is primary")
+			}
+
+			log.Printf("Length of commit channel: %d", len(follower.commitChan))
+			log.Printf("Length of log: %d", len(follower.log))
+			log.Printf("Commit idx: %d", follower.commitIndex)
+
+			if int(follower.commitIndex) != len(follower.commitChan) {
+				t.Fatalf("Follower failed to apply committed indices.  Commit channel is of length %d, should be %d", len(follower.commitChan), follower.commitIndex)
 			}
 
 		})

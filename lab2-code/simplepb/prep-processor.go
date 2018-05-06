@@ -5,6 +5,9 @@ import (
 	"sort"
 )
 
+// prepareProcessor is the heart of the replication daemon
+// The processor waits for commands, and is guaranteed to process them sequentially.
+// The processor also detects when it falls behind, and initiates recovery in that case.
 func (srv *PBServer) prepareProcessor() {
 	recvdArgs := make([]*callbackArg, 0)
 	log.Printf("Server %d: Beginning Central Prep Processor\n", srv.me)
@@ -13,11 +16,9 @@ func (srv *PBServer) prepareProcessor() {
 		log.Printf("Server %d: CPP: Received arg {%d}\n", srv.me, callArg.args.Index)
 
 		// Check if recovery is necessary
-		if callArg.args.PrimaryCommit > int32(len(srv.log)) || srv.currentView < callArg.args.View {
+		if callArg.args.PrimaryCommit >= int32(len(srv.log)) || srv.currentView < callArg.args.View {
 
 			log.Printf("Server %d: CPP: This log {%d} is behind primary {%d}!\n", srv.me, srv.commitIndex, callArg.args.PrimaryCommit)
-
-			log.Printf("Server %d: CPP: Detonating backlog with negative acks\n", srv.me)
 
 			callArg.callback <- false
 			for _, arg := range recvdArgs {
@@ -28,6 +29,7 @@ func (srv *PBServer) prepareProcessor() {
 			srv.sendRecovery()
 
 		} else {
+			// Check if it's just a commitIdx update
 			log.Printf("Server %d: CPP: appending {%d} to backlog\n", srv.me, callArg.args.Index)
 			// Append the received prepare to the log
 			recvdArgs = append(recvdArgs, callArg)
@@ -44,12 +46,18 @@ func (srv *PBServer) prepareProcessor() {
 				// Append cmd to log, and send an okay to the prep RPC
 				log.Printf("Server %d: CPP: processing arg of idx %d\n", srv.me, recvdArgs[0].args.Index)
 				srv.log = append(srv.log, recvdArgs[0].args.Entry)
+				if srv.commitIndex != recvdArgs[0].args.PrimaryCommit {
+					for idx := srv.commitIndex + 1; idx <= recvdArgs[0].args.PrimaryCommit; idx++ {
+						srv.commitChan <- srv.log[idx]
+					}
+				}
 				srv.commitIndex = recvdArgs[0].args.PrimaryCommit
 				log.Printf("Server %d: CPP: sending good news to callback...\n", srv.me)
 				recvdArgs[0].callback <- true
 				recvdArgs = recvdArgs[1:]
 			}
 			srv.mu.Unlock()
+
 		}
 	}
 

@@ -31,6 +31,8 @@ func (srv *PBServer) Recovery(ctx context.Context, args *replication.RecoveryArg
 		peerIdx = len(srv.peerAddresses) - 1
 	}
 
+	log.Printf("PRIMARY: Recovery for %s: Sending reply", args.Address)
+
 	if args.View != srv.currentView {
 		log.Printf("PRIMARY: RECOVERY for %s: View out of sync; this %d vs req %d\n", args.Address, srv.currentView, args.View)
 	} else {
@@ -80,6 +82,10 @@ func (srv *PBServer) sendRecovery() {
 				srv.peers = make([]replication.ReplicationClient, 0)
 				for _, addr := range rep.Peers {
 					srv.connectPeer(addr)
+				}
+
+				for idx := int32(1); idx <= srv.commitIndex; idx++ {
+					srv.commitChan <- srv.log[idx]
 				}
 			}
 		}
