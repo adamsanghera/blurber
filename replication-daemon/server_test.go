@@ -146,14 +146,15 @@ func TestNewReplicationDaemon(t *testing.T) {
 				t.Fatalf("Follower thinks she is primary")
 			}
 
-			log.Printf("Length of commit channel: %d", len(follower.commitChan))
-			log.Printf("Length of log: %d", len(follower.log))
-			log.Printf("Commit idx: %d", follower.commitIndex)
-
 			if int(follower.commitIndex) != len(follower.commitChan) {
 				t.Fatalf("Follower failed to apply committed indices.  Commit channel is of length %d, should be %d", len(follower.commitChan), follower.commitIndex)
 			}
 
+			if int(srv.commitIndex) != len(srv.commitChan) {
+				t.Fatalf("Leader failed to apply committed indices.  Commit channel is of length %d, should be %d", len(srv.commitChan), srv.commitIndex)
+			}
+
+			log.Printf("Number of commits backed up in leader is %d", len(srv.commitChan))
 		})
 	}
 }

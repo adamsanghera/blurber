@@ -5,22 +5,24 @@ import (
 
 	"github.com/adamsanghera/blurber-protobufs/dist/common"
 	subpb "github.com/adamsanghera/blurber-protobufs/dist/subscription"
-	"github.com/adamsanghera/blurber/lab2-code/simplepb"
+	rep "github.com/adamsanghera/blurber/replication-daemon"
 )
 
 type LedgerServer struct {
-	ledger *LocalLedger
-	addr   string
+	ledger       *LocalLedger
+	addr         string
+	internalAddr string
 
-	replicationDaemon simplepb.PBServer
+	replicationDaemon *rep.PBServer
 }
 
-func NewLedgerServer(addr string) *LedgerServer {
+func NewLedgerServer(addr string, internalAddr string) *LedgerServer {
 	return &LedgerServer{
-		ledger: NewLocalLedger(),
-		addr:   addr,
+		ledger:       NewLocalLedger(),
+		addr:         addr,
+		internalAddr: internalAddr,
 
-		replicationDaemon: simplepb.Make()
+		replicationDaemon: rep.NewReplicationDaemon(internalAddr, internalAddr),
 	}
 }
 

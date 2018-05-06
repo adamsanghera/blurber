@@ -49,6 +49,9 @@ func (srv *PBServer) syncrhonize(index int32, view int32, commit int32, command 
 			// Committed
 			if srv.commitIndex < index {
 				log.Printf("PRIMARY: ACC for %d: Updating commit idx to %d\n", index, index)
+				for idx := srv.commitIndex + 1; idx <= index; idx++ {
+					srv.commitChan <- srv.log[idx]
+				}
 				srv.commitIndex = index
 			}
 		}
