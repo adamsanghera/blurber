@@ -1,4 +1,4 @@
 blurber
 protobufs/dist/
 logs
-subscription-driver/*.txt
+subscription-driver/logs
