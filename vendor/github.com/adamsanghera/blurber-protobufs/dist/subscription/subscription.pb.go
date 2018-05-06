@@ -90,9 +90,12 @@ const _ = grpc.SupportPackageIsVersion4
 // Client API for SubscriptionDB service
 
 type SubscriptionDBClient interface {
+	// Replicated RPCs
 	Add(ctx context.Context, in *Subscription, opts ...grpc.CallOption) (*common.Empty, error)
 	Delete(ctx context.Context, in *Subscription, opts ...grpc.CallOption) (*common.Empty, error)
 	DeletePresenceOf(ctx context.Context, in *common.UserID, opts ...grpc.CallOption) (*common.Empty, error)
+
+	// Non-replicated RPCs
 	GetLeadersOf(ctx context.Context, in *common.UserID, opts ...grpc.CallOption) (*Users, error)
 	GetFollowersOf(ctx context.Context, in *common.UserID, opts ...grpc.CallOption) (*Users, error)
 }
@@ -153,9 +156,11 @@ func (c *subscriptionDBClient) GetFollowersOf(ctx context.Context, in *common.Us
 // Server API for SubscriptionDB service
 
 type SubscriptionDBServer interface {
+	// Replicated RPCs
 	Add(context.Context, *Subscription) (*common.Empty, error)
 	Delete(context.Context, *Subscription) (*common.Empty, error)
 	DeletePresenceOf(context.Context, *common.UserID) (*common.Empty, error)
+	// Non-replicated RPCs
 	GetLeadersOf(context.Context, *common.UserID) (*Users, error)
 	GetFollowersOf(context.Context, *common.UserID) (*Users, error)
 }
