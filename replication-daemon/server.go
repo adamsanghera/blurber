@@ -54,29 +54,7 @@ func GetPrimary(view int32, nservers int32) int32 {
 	return view % nservers
 }
 
-func (srv *PBServer) connectPeer(addr string) error {
-	conn, err := grpc.Dial(addr, grpc.WithInsecure())
-	if err != nil {
-		log.Printf("ReplicationD: Failed to connect to the Replication Daemon at %s", addr)
-		return err
-	}
-	self := replication.NewReplicationClient(conn)
-	log.Printf("ReplicationD: Successfully connected to peer at %s", addr)
-
-	srv.peers = append(srv.peers, self)
-	srv.peerAddresses = append(srv.peerAddresses, addr)
-
-	if GetPrimary(srv.currentView, int32(len(srv.peerAddresses))) == srv.me {
-		for _, client := range srv.peers {
-			log.Printf("PRIMARY: Sending peer list to %v", client)
-			// client.SharePeers(srv.peerAddresses)
-		}
-	}
-
-	return nil
-}
-
-func runGRPCServer(thisAddress string, srv *PBServer) {
+func initGRPCServer(thisAddress string, srv *PBServer) {
 	log.Printf("ReplicationD: Registering to listen on (%s)", thisAddress)
 	lis, err := net.Listen("tcp", thisAddress)
 	if err != nil {
@@ -86,7 +64,7 @@ func runGRPCServer(thisAddress string, srv *PBServer) {
 	replication.RegisterReplicationServer(srv.grpcServer, srv)
 	reflection.Register(srv.grpcServer)
 
-	log.Printf("ReplicationD: Registered successfully (%s)", thisAddress)
+	log.Printf("Replicatio nD: Registered successfully (%s)", thisAddress)
 
 	if err = srv.grpcServer.Serve(lis); err != nil {
 		panic("ReplicationD: Failed to start gRPC server")
@@ -159,25 +137,28 @@ func NewReplicationDaemon(thisAddress string, leaderAddress string) *PBServer {
 	// Initting daemon connections
 	if thisAddress != leaderAddress {
 		log.Printf("ReplicationD: Spawning as follower")
-		err := srv.connectPeer(leaderAddress)
+		srv.me = 1
+		err := srv.connectPeerUnsafe(leaderAddress)
 		if err != nil {
 			panic(err)
 		}
-		srv.me = 1
+		err = srv.connectPeerUnsafe(thisAddress)
+		if err != nil {
+			panic(err)
+		}
 	} else {
 		log.Printf("ReplicationD: Spawning as leader")
-	}
-
-	err := srv.connectPeer(thisAddress)
-	if err != nil {
-		panic(err)
+		err := srv.connectPeerUnsafe(thisAddress)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	log.Printf("Spwaning replication processor")
 	go srv.prepareProcessor()
 
 	// Registering server
-	go runGRPCServer(thisAddress, srv)
+	go initGRPCServer(thisAddress, srv)
 
 	if leaderAddress != thisAddress {
 		log.Printf("ReplicationD: Follower entering recovery mode")

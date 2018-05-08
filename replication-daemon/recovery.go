@@ -32,11 +32,25 @@ func (srv *PBServer) Recovery(ctx context.Context, args *replication.RecoveryArg
 	// Received contact from a new machine, need to store new connection
 	if peerIdx == -1 {
 		log.Printf("PRIMARY: Recovery for %s: Bootstrapping", args.Address)
-		err := srv.connectPeer(args.Address)
+		err := srv.connectPeerUnsafe(args.Address)
 		if err != nil {
 			log.Printf("Failed to make client connection with peer")
 		}
 		peerIdx = len(srv.peerAddresses) - 1
+	}
+
+	for idx, client := range srv.peers[:len(srv.peers)-1] {
+		if idx != int(srv.me) {
+			log.Printf("PRIMARY: Sending peer list to %s", srv.peerAddresses[idx])
+
+			// Spawn a process to share peers with all our buddies
+			go func(client replication.ReplicationClient) {
+				_, err := client.SharePeers(context.Background(), &replication.Peers{Addresses: srv.peerAddresses})
+				if err != nil {
+					log.Printf("PRIMARY: Failed to connect to client %s", srv.peerAddresses[idx])
+				}
+			}(client)
+		}
 	}
 
 	log.Printf("PRIMARY: Recovery for %s: Sending reply", args.Address)
@@ -60,9 +74,11 @@ func (srv *PBServer) Recovery(ctx context.Context, args *replication.RecoveryArg
 // sendRecovery is a helper function for initiating a daemon's recovery.
 // It triggers the Recovery RPC, targeting the primary.
 func (srv *PBServer) sendRecovery() {
+	srv.mu.Lock()
+	defer srv.mu.Unlock()
+
 	good := false
 
-	srv.mu.Lock()
 	log.Printf("Server %d: CPP in REC: Beginning recovery, locked until completion...\n", srv.me)
 	srv.status = RECOVERING
 	arg := &replication.RecoveryArgs{
@@ -74,6 +90,8 @@ func (srv *PBServer) sendRecovery() {
 		log.Printf("Server %d: CPP in REC: Sending recovery request from addr %s\n", srv.me, srv.peerAddresses[srv.me])
 
 		leaderIdx := GetPrimary(srv.currentView, int32(len(srv.peers)))
+
+		log.Printf("Sending recovery to %s", srv.peerAddresses[leaderIdx])
 
 		rep, err := srv.peers[leaderIdx].Recovery(context.Background(), arg)
 		good = (err == nil)
@@ -96,7 +114,7 @@ func (srv *PBServer) sendRecovery() {
 				srv.peerAddresses = make([]string, 0)
 				srv.peers = make([]replication.ReplicationClient, 0)
 				for _, addr := range rep.Peers {
-					srv.connectPeer(addr)
+					srv.connectPeerUnsafe(addr)
 				}
 
 				// Throw all of the new commands down the hatch
@@ -111,6 +129,4 @@ func (srv *PBServer) sendRecovery() {
 			}
 		}
 	}
-
-	srv.mu.Unlock()
 }
