@@ -37,13 +37,13 @@ func Profile(w http.ResponseWriter, req *http.Request) {
 	defer cancel()
 
 	// Retrieve uid
-	uid, err := userDB.GetID(ctx, &user.Username{Username: username})
+	uid, err := configuration.toUserDB().GetID(ctx, &user.Username{Username: username})
 	if err != nil {
 		w.Write([]byte("Something went very wrong"))
 	}
 
 	// Obtain and sort blurb
-	blurbs, err := blurbDB.GetRecentBy(ctx, uid)
+	blurbs, err := configuration.toBlurbDB().GetRecentBy(ctx, uid)
 	if err != nil {
 		panic(err)
 	}

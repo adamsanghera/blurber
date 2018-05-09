@@ -1,16 +1,20 @@
-package simplepb
+package pbdaemon
 
 import (
 	"context"
+	"log"
 
 	"github.com/adamsanghera/blurber-protobufs/dist/replication"
 )
 
-// PromptViewChange just kicks start the view change protocol to move to the newView
+// PromptViewChange inits the view change protocol to move to the newView
 // It does not block waiting for the view change process to complete.
 func (srv *PBServer) PromptViewChange(newView int32) {
 	srv.mu.Lock()
 	defer srv.mu.Unlock()
+
+	log.Printf("Received PVC request with view num %d", newView)
+
 	newPrimary := GetPrimary(newView, int32(len(srv.peers)))
 
 	if newPrimary != srv.me { //only primary of newView should do view change
@@ -26,7 +30,6 @@ func (srv *PBServer) PromptViewChange(newView int32) {
 	for i := 0; i < len(srv.peers); i++ {
 		go func(server int) {
 			reply, err := srv.peers[server].ViewChange(context.Background(), vcArgs)
-			// fmt.Printf("node-%d (nReplies %d) received reply ok=%v reply=%v\n", srv.me, nReplies, ok, r.reply)
 			if err == nil {
 				vcReplyChan <- reply
 			} else {
@@ -47,20 +50,23 @@ func (srv *PBServer) PromptViewChange(newView int32) {
 				successReplies = append(successReplies, r)
 			}
 			if nReplies == len(srv.peers) || len(successReplies) == majority {
+				log.Printf("Majority of respondents said yes to new view %d", newView)
 				break
 			}
 		}
-		ok, log := srv.determineNewViewLog(successReplies)
+		ok, newLog := srv.determineNewViewLog(successReplies)
 		if !ok {
 			return
 		}
+		log.Printf("New log determined for view %d", newView)
 		svArgs := &replication.SVArgs{
 			View: vcArgs.View,
-			Log:  log,
+			Log:  newLog,
 		}
 		// send StartView to all servers including myself
 		for i := 0; i < len(srv.peers); i++ {
 			go func(server int) {
+				log.Printf("Sending startview to %d for view %d", server, newView)
 				srv.peers[server].StartView(context.Background(), svArgs)
 			}(i)
 		}

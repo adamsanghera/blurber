@@ -1,7 +1,6 @@
-package simplepb
+package pbdaemon
 
 import (
-	"context"
 	"log"
 	"testing"
 	"time"
@@ -9,7 +8,6 @@ import (
 	"github.com/golang/protobuf/ptypes/any"
 
 	"github.com/adamsanghera/blurber-protobufs/dist/replication"
-	"google.golang.org/grpc"
 )
 
 func TestNewReplicationDaemon(t *testing.T) {
@@ -48,27 +46,19 @@ func TestNewReplicationDaemon(t *testing.T) {
 				t.Fatalf("Incorrect peers list size")
 			}
 
-			// Create a replication client
-			conn, err := grpc.Dial(tt.args.leaderAddress, grpc.WithInsecure())
-			if err != nil {
-				t.Fatalf("ReplicationD: Failed to connect to the Replication Daemon at %s", tt.args.leaderAddress)
-
-			}
-			client := replication.NewReplicationClient(conn)
-
-			client.Replicate(context.Background(), &replication.Command{
+			srv.Replicate(&replication.Command{
 				Cmd: &any.Any{
 					TypeUrl: "Add",
 					Value:   []byte("adam"),
 				},
 			})
-			client.Replicate(context.Background(), &replication.Command{
+			srv.Replicate(&replication.Command{
 				Cmd: &any.Any{
 					TypeUrl: "Add",
 					Value:   []byte("bob"),
 				},
 			})
-			client.Replicate(context.Background(), &replication.Command{
+			srv.Replicate(&replication.Command{
 				Cmd: &any.Any{
 					TypeUrl: "Add",
 					Value:   []byte("bob"),
@@ -95,19 +85,19 @@ func TestNewReplicationDaemon(t *testing.T) {
 				t.Fatalf("Failed to replicate peer list:\n\t{%v}\n\tvs\n\t{%v}", follower2.peerAddresses, srv.peerAddresses)
 			}
 
-			client.Replicate(context.Background(), &replication.Command{
+			srv.Replicate(&replication.Command{
 				Cmd: &any.Any{
 					TypeUrl: "Sub",
 					Value:   []byte("adam"),
 				},
 			})
-			client.Replicate(context.Background(), &replication.Command{
+			srv.Replicate(&replication.Command{
 				Cmd: &any.Any{
 					TypeUrl: "Sub",
 					Value:   []byte("bob"),
 				},
 			})
-			client.Replicate(context.Background(), &replication.Command{
+			srv.Replicate(&replication.Command{
 				Cmd: &any.Any{
 					TypeUrl: "Sub",
 					Value:   []byte("bob"),
@@ -146,15 +136,16 @@ func TestNewReplicationDaemon(t *testing.T) {
 				t.Fatalf("Follower thinks she is primary")
 			}
 
-			if int(follower.commitIndex) != len(follower.commitChan) {
-				t.Fatalf("Follower failed to apply committed indices.  Commit channel is of length %d, should be %d", len(follower.commitChan), follower.commitIndex)
+			if int(follower.commitIndex) != len(follower.CommitChan) {
+				t.Fatalf("Follower failed to apply committed indices.  Commit channel is of length %d, should be %d", len(follower.CommitChan), follower.commitIndex)
 			}
 
-			if int(srv.commitIndex) != len(srv.commitChan) {
-				t.Fatalf("Leader failed to apply committed indices.  Commit channel is of length %d, should be %d", len(srv.commitChan), srv.commitIndex)
+			if int(srv.commitIndex) != len(srv.CommitChan) {
+				t.Fatalf("Leader failed to apply committed indices.  Commit channel is of length %d, should be %d", len(srv.CommitChan), srv.commitIndex)
 			}
 
-			log.Printf("Number of commits backed up in leader is %d", len(srv.commitChan))
+			// log.Printf("Number of commits backed up in leader is %d", len(srv.CommitChan))
+			log.Printf("Leader: %v\n1: %v\n2: %v", srv.peerAddresses, follower.peerAddresses, follower2.peerAddresses)
 		})
 	}
 }

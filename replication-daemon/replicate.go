@@ -1,45 +1,32 @@
-package simplepb
+package pbdaemon
 
 import (
-	"context"
+	"errors"
+	"fmt"
 	"log"
 
 	"github.com/adamsanghera/blurber-protobufs/dist/replication"
 )
 
 // Replicate is the entry point to our replication engine
-func (srv *PBServer) Replicate(ctx context.Context, command *replication.Command) (*replication.ReplicateReply, error) {
+func (srv *PBServer) Replicate(cmd *replication.Command) error {
 	srv.mu.Lock()
 	defer srv.mu.Unlock()
 
 	// If we're panicking or not the primary, quit quit quit
 	if srv.status != NORMAL {
-		return &replication.ReplicateReply{
-			Index:   -1,
-			View:    srv.currentView,
-			Success: false,
-		}, nil
+		return fmt.Errorf("Replication Daemon is not OK, but rather %d right now", srv.status)
 	} else if GetPrimary(srv.currentView, int32(len(srv.peers))) != srv.me {
-		return &replication.ReplicateReply{
-			Index:   -1,
-			View:    srv.currentView,
-			Success: false,
-		}, nil
+		return errors.New("Replication Daemon is *not* the master daemon")
 	}
 
 	// Only primaries shall pass...
-	srv.log = append(srv.log, command)
-	reply := &replication.ReplicateReply{
-		Index:   int32(len(srv.log) - 1),
-		View:    srv.currentView,
-		Success: true,
-	}
-
+	srv.log = append(srv.log, cmd)
 	commit := srv.commitIndex
 
-	log.Printf("PRIMARY: Replicate releasing lock, with state values {index: %d} {view: %d} {commit: %d}\n", reply.Index, reply.View, commit)
+	log.Printf("PRIMARY: Replicate releasing lock, with state values {index: %d} {view: %d} {commit: %d}\n", int32(len(srv.log)-1), srv.currentView, commit)
 
-	go srv.syncrhonize(reply.Index, reply.View, commit, command)
+	go srv.syncrhonize(int32(len(srv.log)-1), srv.currentView, commit, cmd)
 
-	return reply, nil
+	return nil
 }

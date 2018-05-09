@@ -1,7 +1,8 @@
-package simplepb
+package pbdaemon
 
 import (
 	"context"
+	"log"
 
 	"github.com/adamsanghera/blurber-protobufs/dist/replication"
 )
@@ -11,7 +12,9 @@ func (srv *PBServer) ViewChange(ctx context.Context, args *replication.VCArgs) (
 	// Your code here
 	srv.mu.Lock()
 	defer srv.mu.Unlock()
+	log.Printf("Responding to view change request %d", args.View)
 	if args.View > srv.currentView {
+		log.Printf("Accepting view change request %d", args.View)
 		srv.currentView = args.View
 		srv.status = VIEWCHANGE
 		return &replication.VCReply{
@@ -20,6 +23,7 @@ func (srv *PBServer) ViewChange(ctx context.Context, args *replication.VCArgs) (
 			LastNormalView: srv.lastNormalView,
 		}, nil
 	}
+	log.Printf("Rejecting view change request %d", args.View)
 	return &replication.VCReply{
 		Success: false,
 	}, nil
@@ -30,7 +34,8 @@ func (srv *PBServer) StartView(ctx context.Context, args *replication.SVArgs) (*
 	// Your code here
 	srv.mu.Lock()
 	defer srv.mu.Unlock()
-	if srv.currentView < args.View {
+	if srv.currentView <= args.View {
+		log.Printf("Accepting new view %d", args.View)
 		srv.currentView = args.View
 		srv.log = args.Log
 		srv.status = NORMAL
@@ -55,5 +60,5 @@ func (srv *PBServer) determineNewViewLog(successReplies []*replication.VCReply) 
 			minView = v.LastNormalView
 		}
 	}
-	return ok, newViewLog
+	return true, newViewLog
 }

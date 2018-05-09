@@ -43,8 +43,8 @@ func Subscribe(w http.ResponseWriter, r *http.Request) {
 	defer cancel()
 
 	// Retrieve uid
-	uid, err := userDB.GetID(ctx, &user.Username{Username: uname})
-	lid, lErr := userDB.GetID(ctx, &user.Username{Username: leaderName})
+	uid, err := configuration.toUserDB().GetID(ctx, &user.Username{Username: uname})
+	lid, lErr := configuration.toUserDB().GetID(ctx, &user.Username{Username: leaderName})
 
 	// Verify leader exists
 	if lErr != nil {
@@ -59,7 +59,7 @@ func Subscribe(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Submit subscription request to ledger
-	_, err = subDB.Add(ctx, &sub.Subscription{
+	_, err = configuration.toSubDBs().Add(ctx, &sub.Subscription{
 		Follower: uid,
 		Leader:   lid,
 	})
@@ -68,7 +68,7 @@ func Subscribe(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	_, err = blurbDB.InvalidateFeedCache(ctx, uid)
+	_, err = configuration.toBlurbDB().InvalidateFeedCache(ctx, uid)
 	if err != nil {
 		panic(err)
 	}
@@ -110,15 +110,15 @@ func Unsubscribe(w http.ResponseWriter, r *http.Request) {
 	defer cancel()
 
 	// Retrieve uid
-	uid, _ := userDB.GetID(ctx, &user.Username{Username: uname})
-	lid, _ := userDB.GetID(ctx, &user.Username{Username: leaderName})
+	uid, _ := configuration.toUserDB().GetID(ctx, &user.Username{Username: uname})
+	lid, _ := configuration.toUserDB().GetID(ctx, &user.Username{Username: leaderName})
 
-	subDB.Delete(ctx, &sub.Subscription{
+	configuration.toSubDBs().Delete(ctx, &sub.Subscription{
 		Follower: uid,
 		Leader:   lid,
 	})
 
-	_, err = blurbDB.InvalidateFeedCache(ctx, uid)
+	_, err = configuration.toBlurbDB().InvalidateFeedCache(ctx, uid)
 	if err != nil {
 		panic(err)
 	}

@@ -1,0 +1,1 @@
+kill `ps -A -ww | grep './[s]ubscription-driver' | cut -d ' ' -f 1`

@@ -15,10 +15,6 @@ import (
 
 func createListenAddr() string {
 	listenPort := os.Getenv("SUB_PORT")
-
-	// if listenHost == "" {
-	// 	panic("No hostname set")
-	// }
 	if listenPort == "" {
 		panic("No port number set")
 	}
@@ -31,7 +27,17 @@ func main() {
 
 	log.Printf("SubServer: Derived address: (%s)", addr)
 
-	srv := subscription.NewLedgerServer(addr)
+	var srv *subscription.LedgerServer
+
+	replicationAddr := addr[:len(addr)-1] + "1"
+
+	if os.Getenv("LEADER_ADDRESS") == "0" {
+		// Making a new leader
+		srv = subscription.NewLedgerServer(addr, replicationAddr, replicationAddr)
+	} else {
+		// Point the follower @ the leader address
+		srv = subscription.NewLedgerServer(addr, replicationAddr, os.Getenv("LEADER_ADDRESS"))
+	}
 
 	lis, err := net.Listen("tcp", addr)
 	if err != nil {

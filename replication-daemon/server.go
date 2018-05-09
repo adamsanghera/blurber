@@ -1,4 +1,4 @@
-package simplepb
+package pbdaemon
 
 //
 // This is a outline of primary-backup replication based on a simplifed version of Viewstamp replication.
@@ -7,6 +7,7 @@ package simplepb
 //
 
 import (
+	"context"
 	"log"
 	"net"
 	"sync"
@@ -41,9 +42,11 @@ type PBServer struct {
 
 	log         []*replication.Command // the log of "commands"
 	commitIndex int32                  // all log entries <= commitIndex are considered to have been committed.
-	commitChan  chan *replication.Command
+	CommitChan  chan *replication.Command
 
 	prepChan chan *callbackArg // Channel used by prep calls to communicate with the central prep-processor
+
+	grpcServer *grpc.Server
 }
 
 // GetPrimary is an auxilary function that returns the server index of the
@@ -52,65 +55,65 @@ func GetPrimary(view int32, nservers int32) int32 {
 	return view % nservers
 }
 
-// IsCommitted is called by tester to check whether an index position
-// has been considered committed by this server
-func (srv *PBServer) IsCommitted(index int32) (committed bool) {
-	srv.mu.Lock()
-	defer srv.mu.Unlock()
-	if srv.commitIndex >= index {
-		return true
-	}
-	return false
-}
-
-func (srv *PBServer) connectPeer(addr string) error {
-	conn, err := grpc.Dial(addr, grpc.WithInsecure())
-	if err != nil {
-		log.Printf("ReplicationD: Failed to connect to the Replication Daemon at %s", addr)
-		return err
-	}
-	self := replication.NewReplicationClient(conn)
-	log.Printf("ReplicationD: Successfully connected to peer at %s", addr)
-
-	srv.peers = append(srv.peers, self)
-	srv.peerAddresses = append(srv.peerAddresses, addr)
-	return nil
-}
-
-// ViewStatus is called by tester to find out the current view of this server
-// and whether this view has a status of NORMAL.
-func (srv *PBServer) ViewStatus() (currentView int32, statusIsNormal bool) {
-	srv.mu.Lock()
-	defer srv.mu.Unlock()
-	return srv.currentView, srv.status == NORMAL
-}
-
-// GetEntryAtIndex is called by tester to return the command replicated at
-// a specific log index. If the server's log is shorter than "index", then
-// ok = false, otherwise, ok = true
-func (srv *PBServer) GetEntryAtIndex(index int) (ok bool, command interface{}) {
-	srv.mu.Lock()
-	defer srv.mu.Unlock()
-	if len(srv.log) > index {
-		return true, srv.log[index]
-	}
-	return false, command
-}
-
-func runGRPCServer(thisAddress string, srv *PBServer) {
+func initGRPCServer(thisAddress string, srv *PBServer) {
 	log.Printf("ReplicationD: Registering to listen on (%s)", thisAddress)
 	lis, err := net.Listen("tcp", thisAddress)
 	if err != nil {
 		panic(err)
 	}
-	s := grpc.NewServer()
-	replication.RegisterReplicationServer(s, srv)
-	reflection.Register(s)
+	srv.grpcServer = grpc.NewServer()
+	replication.RegisterReplicationServer(srv.grpcServer, srv)
+	reflection.Register(srv.grpcServer)
 
-	log.Printf("ReplicationD: Registered successfully (%s)", thisAddress)
+	log.Printf("Replicatio nD: Registered successfully (%s)", thisAddress)
 
-	if err = s.Serve(lis); err != nil {
+	if err = srv.grpcServer.Serve(lis); err != nil {
 		panic("ReplicationD: Failed to start gRPC server")
+	}
+}
+
+// Home grown find method for slice since go standard lib doesn't have one
+// Maybe this is why: https://github.com/golang/go/wiki/InterfaceSlice
+func findSlice(addr string, allAddrs []string) int {
+	for i, e := range allAddrs {
+		if e == addr {
+			return i
+		}
+	}
+	return -1
+
+}
+
+func (srv *PBServer) disconnectPeer(addr string) error {
+	// do we really need to disconnect client conn?
+
+	// Get index i of the peer addr to be disconnected
+	i := findSlice(addr, srv.peerAddresses)
+	srv.peers = append(srv.peers[:i], srv.peers[i+1:]...)
+	srv.peerAddresses = append(srv.peerAddresses[:i], srv.peerAddresses[i+1:]...)
+
+	return nil
+}
+
+// StopGRPCServer is used in unit testing to simulate server failure
+func (srv *PBServer) StopGRPCServer() {
+	log.Printf("Stopping gRPC server %v", srv.me)
+
+	// Disconnect peers
+	for i, addr := range srv.peerAddresses {
+		if int32(i) != srv.me {
+			srv.disconnectPeer(addr)
+		}
+	}
+
+	srv.grpcServer.Stop()
+}
+
+func (srv *PBServer) PropagateCommitsUnsafe() {
+	for idx, client := range srv.peers {
+		if idx != int(srv.me) {
+			go client.Prepare(context.Background(), &replication.PrepareArgs{View: srv.currentView, PrimaryCommit: srv.commitIndex, Index: -1, Entry: nil})
+		}
 	}
 }
 
@@ -128,12 +131,14 @@ func NewReplicationDaemon(thisAddress string, leaderAddress string) *PBServer {
 		lastNormalView: 0,
 		log:            make([]*replication.Command, 0),
 		commitIndex:    0,
-		commitChan:     make(chan *replication.Command, 1000),
+		CommitChan:     make(chan *replication.Command, 1000),
 		prepChan:       make(chan *callbackArg),
 	}
 
 	srv.mu.Lock()
 	defer srv.mu.Unlock()
+
+	log.Printf("New Daemon created at %s, pointing at %s", thisAddress, leaderAddress)
 
 	// Init log
 	srv.log = append(srv.log, &replication.Command{})
@@ -141,18 +146,18 @@ func NewReplicationDaemon(thisAddress string, leaderAddress string) *PBServer {
 	// Initting daemon connections
 	if thisAddress != leaderAddress {
 		log.Printf("ReplicationD: Spawning as follower")
-		err := srv.connectPeer(leaderAddress)
-		if err != nil {
-			panic(err)
-		}
-		err = srv.connectPeer(thisAddress)
-		if err != nil {
-			panic(err)
-		}
 		srv.me = 1
+		err := srv.connectPeerUnsafe(leaderAddress)
+		if err != nil {
+			panic(err)
+		}
+		err = srv.connectPeerUnsafe(thisAddress)
+		if err != nil {
+			panic(err)
+		}
 	} else {
 		log.Printf("ReplicationD: Spawning as leader")
-		err := srv.connectPeer(thisAddress)
+		err := srv.connectPeerUnsafe(thisAddress)
 		if err != nil {
 			panic(err)
 		}
@@ -162,7 +167,7 @@ func NewReplicationDaemon(thisAddress string, leaderAddress string) *PBServer {
 	go srv.prepareProcessor()
 
 	// Registering server
-	go runGRPCServer(thisAddress, srv)
+	go initGRPCServer(thisAddress, srv)
 
 	if leaderAddress != thisAddress {
 		log.Printf("ReplicationD: Follower entering recovery mode")
