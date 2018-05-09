@@ -1,5 +1,18 @@
 # Blurber
 
+## In the Wild
+
+This app can also be found deployed on heroku, at https://dist-blurber.herokuapp.com/
+
+The Front-End server (everything in the main.go hierarchy) is hosted on heroku, and is set up to continously build on the `/release` branch on our github repo.
+
+The front-end server connects to a backend server hosted by Linode.com (it's cheap).
+
+The three (3!) backend services are hosted on the Linode server, which the heroku app sends gRPC messages to.
+
+Presentation [here](https://docs.google.com/presentation/d/12NiHIcGTcz7X2BDt6xCZzmFr_fd1oqcMI2ifORQc52M/edit?usp=sharing)
+
+
 ## Main features
 
 - [x] Login/ register
@@ -67,16 +80,6 @@ These will be managed in branches:
 1. `cd` your way into `./` and exec `.runLocal.sh`, if your FE server is on your lapto.  Otherwise, exec `./run.sh` if the backend is on the linode server.
 1. Point your favorite browser @ `http://localhost:4000` if the FE server is running locally, or `http://172.104.24.141:4000` if the FE server is running on linode
 1. When you're done playing around, exec `./killBackend.sh`
-
-## In the Wild
-
-This app can also be found deployed on heroku, at https://dist-blurber.herokuapp.com/
-
-The Front-End server (everything in the main.go hierarchy) is hosted on heroku, and is set up to continously build on the `/release` branch on our github repo.
-
-The front-end server connects to a backend server hosted by Linode.com (it's cheap).
-
-The three (3!) backend services are hosted on the Linode server, which the heroku app sends gRPC messages to.
 
 ## Team
 
