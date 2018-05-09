@@ -9,12 +9,13 @@ import (
 	"sync"
 	"time"
 
+	"google.golang.org/grpc/connectivity"
+
 	"github.com/adamsanghera/blurber-protobufs/dist/blurb"
 	"github.com/adamsanghera/blurber-protobufs/dist/common"
 	"github.com/adamsanghera/blurber-protobufs/dist/subscription"
 	"github.com/adamsanghera/blurber-protobufs/dist/user"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/keepalive"
 )
 
 type config struct {
@@ -48,6 +49,7 @@ type config struct {
 // which is the leader
 func (c *config) updateLeaders() {
 	c.muts.subMut.Lock()
+	defer c.muts.subMut.Unlock()
 	voteChannel := make(chan *common.ServerInfo)
 	for addr, client := range c.clients.subDBs {
 
@@ -57,6 +59,15 @@ func (c *config) updateLeaders() {
 			info, err := subclient.Leader(ctx, &common.Empty{})
 			if err != nil {
 				log.Printf("SERVER CONN: Failed to contact %s, with msg {%s}", addr, err.Error())
+				if addr == c.leaders.sub {
+					// prompt view change
+					defer c.updateLeaders()
+					for addr, client := range c.clients.subDBs {
+						if c.connections.subs[addr].GetState() == connectivity.Ready {
+							client.PromptViewChange()
+						}
+					}
+				}
 			}
 			vChan <- info
 			cancel()
@@ -83,7 +94,6 @@ func (c *config) updateLeaders() {
 	}
 
 	c.leaders.sub = winner
-	c.muts.subMut.Unlock()
 }
 
 // maintainConnections calls updateLeaders periodically
@@ -92,6 +102,7 @@ func (c *config) maintainConnections() {
 	for {
 		c.updateLeaders()
 		log.Printf("SERVER: Leader for epoch %d is %s", epoch, c.leaders.sub)
+		epoch++
 		time.Sleep(5 * time.Second)
 	}
 }
@@ -108,6 +119,15 @@ func (c *config) toSubDBs() subscription.SubscriptionDBClient {
 	// acquire the lock so that we don't concurrently access the subDBs map
 	c.muts.subMut.Lock()
 	defer c.muts.subMut.Unlock()
+
+	if c.connections.subs[c.leaders.sub].GetState() != connectivity.Ready {
+		log.Printf("SERVER: Leader connection %s is not ready... calling an election", c.leaders.sub)
+
+		// Need to release lock for the election
+		c.muts.subMut.Unlock()
+		c.updateLeaders()
+		c.muts.subMut.Lock()
+	}
 
 	return c.clients.subDBs[c.leaders.sub]
 }
@@ -138,28 +158,31 @@ func gatherAddresses() {
 }
 
 func dialServers() {
-	dialOpts := grpc.WithKeepaliveParams(keepalive.ClientParameters{
-		Time:                5 * time.Second,
-		Timeout:             1 * time.Second,
-		PermitWithoutStream: true,
-	})
+	// dialOpts := grpc.WithKeepaliveParams(keepalive.ClientParameters{
+	// 	Time:                5 * time.Second,
+	// 	Timeout:             2 * time.Second,
+	// 	PermitWithoutStream: false,
+	// })
+	dialOpts := grpc.WithInsecure()
 
 	// Blurb database
 	var err error
 	configuration.connections.blurb, err = grpc.Dial(configuration.addresses.blurbDB, dialOpts)
 	if err != nil {
 		log.Printf("SERVER: Failed to connect to BlurbDB at %s", configuration.addresses.blurbDB)
+	} else {
+		configuration.clients.blurbDB = blurb.NewBlurbDBClient(configuration.connections.blurb)
+		log.Printf("SERVER: Successfully created a connection to BlurbDB at %s", configuration.addresses.blurbDB)
 	}
-	configuration.clients.blurbDB = blurb.NewBlurbDBClient(configuration.connections.blurb)
-	log.Printf("SERVER: Successfully created a connection to blurb db")
 
 	// User database
 	configuration.connections.user, err = grpc.Dial(configuration.addresses.userDB, dialOpts)
 	if err != nil {
 		log.Printf("SERVER: Failed to connect to UserDB at %s", configuration.addresses.userDB)
+	} else {
+		configuration.clients.userDB = user.NewUserDBClient(configuration.connections.user)
+		log.Printf("SERVER: Successfully created a connection to UserDB at %s", configuration.addresses.userDB)
 	}
-	configuration.clients.userDB = user.NewUserDBClient(configuration.connections.user)
-	log.Printf("SERVER: Successfully created a connection to user db")
 
 	// Subscription databases
 	configuration.clients.subDBs = make(map[string]subscription.SubscriptionDBClient, 3)
@@ -170,10 +193,11 @@ func dialServers() {
 		configuration.connections.subs[addr], err = grpc.DialContext(context.Background(), addr, dialOpts)
 		if err != nil {
 			log.Printf("SERVER: Failed to connect to SubDB at %s", addr)
+		} else {
+			configuration.clients.subDBs[addr] = subscription.NewSubscriptionDBClient(configuration.connections.subs[addr])
+			log.Printf("SERVER: Successfully created a connection to SubDB %s", addr)
 		}
-		configuration.clients.subDBs[addr] = subscription.NewSubscriptionDBClient(configuration.connections.subs[addr])
 	}
-	log.Printf("SERVER: Successfully created a connection to sub dbs")
 }
 
 func initializeConnectors() {
@@ -188,8 +212,10 @@ func initializeConnectors() {
 	// dial the servers
 	dialServers()
 
-	// start maintaining a history of who the leader is
+	// start maintaining a history of who the leader is, sending messages
 	go configuration.maintainConnections()
 
-	log.Printf("SERVER: Initialized! All gRPC connections secured\n")
+	time.Sleep(1 * time.Second)
+
+	log.Printf("SERVER: Finished Initialization! All gRPC connections secured:\n %v", configuration)
 }

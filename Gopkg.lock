@@ -11,7 +11,7 @@
     "dist/subscription",
     "dist/user"
   ]
-  revision = "a99a82ff5f5b5780dec2cb4ead9833bc2c815984"
+  revision = "d70ade86858e569ceeee9c3e2a5f51728d5bb523"
 
 [[projects]]
   name = "github.com/golang/protobuf"
@@ -38,7 +38,7 @@
     "internal/timeseries",
     "trace"
   ]
-  revision = "3a7846fea0afe8cc88deb31d8cfb1fa15a3615ef"
+  revision = "f73e4c9ed3b7ebdd5f699a16a880c2b1994e50dd"
 
 [[projects]]
   name = "golang.org/x/text"
@@ -103,6 +103,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "589047cfa4fa5509cd20795a7b1b8117dcf57570a0a7137fcc19f7d3d12ed75b"
+  inputs-digest = "56523ef02571660db802cb709639c639693912ae266ce610fca25f134e20acfc"
   solver-name = "gps-cdcl"
   solver-version = 1

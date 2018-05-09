@@ -46,3 +46,17 @@ func (srv *PBServer) SharePeers(ctx context.Context, in *replication.Peers) (*co
 
 	return &common.Empty{}, nil
 }
+
+// GetLeaderInfo is a safe function for getting a snapshot of who the replication daemon believes is its leader
+func (srv *PBServer) GetLeaderInfo() (int32, string) {
+	srv.mu.Lock()
+	defer srv.mu.Unlock()
+	idx := GetPrimary(srv.currentView, int32(len(srv.peers)))
+	return idx, srv.peerAddresses[idx]
+}
+
+func (srv *PBServer) GetView() int32 {
+	srv.mu.Lock()
+	defer srv.mu.Unlock()
+	return srv.currentView
+}

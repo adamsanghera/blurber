@@ -82,6 +82,21 @@ func NewLedgerServer(addr string, replicationAddress string, replicationLeaderAd
 	return ls
 }
 
+// Leader returns the address and index of the replication daemon that our child replication daemon believes is the leader
+func (ls *LedgerServer) Leader(ctx context.Context, in *common.Empty) (*common.ServerInfo, error) {
+	idx, addr := ls.replicationDaemon.GetLeaderInfo()
+	return &common.ServerInfo{
+		Index:   idx,
+		Address: addr,
+	}, nil
+}
+
+func (ls *LedgerServer) PromptViewChange(ctx context.Context, in *common.Empty) (*common.Empty, error) {
+	ls.replicationDaemon.PromptViewChange(ls.replicationDaemon.GetView())
+	return &common.Empty{}, nil
+}
+
+// Add creates a new subscription
 func (ls *LedgerServer) Add(ctx context.Context, in *subpb.Subscription) (*common.Empty, error) {
 	serialized, err := proto.Marshal(in)
 	if err != nil {
@@ -98,6 +113,7 @@ func (ls *LedgerServer) Add(ctx context.Context, in *subpb.Subscription) (*commo
 	return &common.Empty{}, ls.replicationDaemon.Replicate(cmd)
 }
 
+// Delete removes a subscription
 func (ls *LedgerServer) Delete(ctx context.Context, in *subpb.Subscription) (*common.Empty, error) {
 	serialized, err := proto.Marshal(in)
 	if err != nil {
@@ -114,6 +130,7 @@ func (ls *LedgerServer) Delete(ctx context.Context, in *subpb.Subscription) (*co
 	return &common.Empty{}, ls.replicationDaemon.Replicate(cmd)
 }
 
+// DeletePresenceOf deletes all subscriptions to and from a given user
 func (ls *LedgerServer) DeletePresenceOf(ctx context.Context, in *common.UserID) (*common.Empty, error) {
 	serialized, err := proto.Marshal(in)
 	if err != nil {
@@ -130,6 +147,7 @@ func (ls *LedgerServer) DeletePresenceOf(ctx context.Context, in *common.UserID)
 	return &common.Empty{}, ls.replicationDaemon.Replicate(cmd)
 }
 
+// GetLeadersOf returns a list of all the users that a given user follows
 func (ls *LedgerServer) GetLeadersOf(ctx context.Context, in *common.UserID) (*subpb.Users, error) {
 	ret, err := ls.ledger.GetLeaders(in.UserID)
 
@@ -144,6 +162,7 @@ func (ls *LedgerServer) GetLeadersOf(ctx context.Context, in *common.UserID) (*s
 	}, err
 }
 
+// GetFollowersOf returns a list of all the users that follow the given user
 func (ls *LedgerServer) GetFollowersOf(ctx context.Context, in *common.UserID) (*subpb.Users, error) {
 	ret, err := ls.ledger.GetFollowers(in.UserID)
 
