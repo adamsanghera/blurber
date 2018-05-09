@@ -91,8 +91,14 @@ func (ls *LedgerServer) Leader(ctx context.Context, in *common.Empty) (*common.S
 	}, nil
 }
 
+// PromptViewChange tells the replication daemon child to try and make itself the leader
 func (ls *LedgerServer) PromptViewChange(ctx context.Context, in *common.Empty) (*common.Empty, error) {
-	ls.replicationDaemon.PromptViewChange(ls.replicationDaemon.GetView() + 1)
+	np := ls.replicationDaemon.GetNumPeers()
+	vn := ls.replicationDaemon.GetView()
+	idx := ls.replicationDaemon.GetIndex()
+
+	// Calculate the minimal view number needed to make *this* rep daemon the leader
+	ls.replicationDaemon.PromptViewChange(vn - (vn % np) + idx)
 	return &common.Empty{}, nil
 }
 

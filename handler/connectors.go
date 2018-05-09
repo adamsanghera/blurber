@@ -82,7 +82,8 @@ func (c *config) updateLeaders() {
 			log.Printf("SERVER CONN: Failed to contact %s, with msg {%s}", voterAddr, vote.err.Error())
 			// Only call for a view change if the absent voter is the leader
 			// log.Printf("Testing: %s == %s", voterAddr[len(voterAddr)-4:len(voterAddr)-1], c.leaders.sub[1:4])
-			if voterAddr[len(voterAddr)-5:len(voterAddr)-1] == c.leaders.sub[:4] {
+			if c.leaders.sub != "" && voterAddr[len(voterAddr)-5:len(voterAddr)-1] == c.leaders.sub[:4] {
+				c.leaders.sub = ""
 				// prompt view change
 				for addr, client := range c.clients.subDBs {
 					if c.connections.subs[addr].GetState() == connectivity.Ready {
@@ -90,15 +91,18 @@ func (c *config) updateLeaders() {
 						_, err := client.PromptViewChange(context.Background(), &common.Empty{})
 						if err != nil {
 							log.Printf("SERVER CONN: Failed to prompt view change at %s, err msg {%s}", addr, err.Error())
+						} else {
+							return
 						}
 					}
 				}
 			}
+		} else {
+			if _, exists := voteBox[vote.info.Address]; !exists {
+				voteBox[vote.info.Address] = 0
+			}
+			voteBox[vote.info.Address]++
 		}
-		if _, exists := voteBox[vote.info.Address]; !exists {
-			voteBox[vote.info.Address] = 0
-		}
-		voteBox[vote.info.Address]++
 	}
 
 	winner := ""
@@ -109,6 +113,8 @@ func (c *config) updateLeaders() {
 		}
 	}
 
+	log.Printf("Vote results: %v", voteBox)
+
 	c.leaders.sub = winner
 }
 
@@ -117,6 +123,13 @@ func (c *config) maintainConnections() {
 	epoch := 0
 	for {
 		c.updateLeaders()
+		c.muts.subMut.Lock()
+		if c.leaders.sub == "" {
+			c.muts.subMut.Unlock()
+			c.updateLeaders()
+		} else {
+			c.muts.subMut.Unlock()
+		}
 		log.Printf("SERVER: Leader for epoch %d is %s", epoch, c.leaders.sub)
 		epoch++
 		time.Sleep(5 * time.Second)

@@ -60,3 +60,15 @@ func (srv *PBServer) GetView() int32 {
 	defer srv.mu.Unlock()
 	return srv.currentView
 }
+
+func (srv *PBServer) GetIndex() int32 {
+	srv.mu.Lock()
+	defer srv.mu.Unlock()
+	return srv.me
+}
+
+func (srv *PBServer) GetNumPeers() int32 {
+	srv.mu.Lock()
+	defer srv.mu.Unlock()
+	return int32(len(srv.peerAddresses))
+}
