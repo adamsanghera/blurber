@@ -50,20 +50,23 @@ func (srv *PBServer) PromptViewChange(newView int32) {
 				successReplies = append(successReplies, r)
 			}
 			if nReplies == len(srv.peers) || len(successReplies) == majority {
+				log.Printf("Majority of respondents said yes to new view %d", newView)
 				break
 			}
 		}
-		ok, log := srv.determineNewViewLog(successReplies)
+		ok, newLog := srv.determineNewViewLog(successReplies)
 		if !ok {
 			return
 		}
+		log.Printf("New log determined for view %d", newView)
 		svArgs := &replication.SVArgs{
 			View: vcArgs.View,
-			Log:  log,
+			Log:  newLog,
 		}
 		// send StartView to all servers including myself
 		for i := 0; i < len(srv.peers); i++ {
 			go func(server int) {
+				log.Printf("Sending startview to %d for view %d", server, newView)
 				srv.peers[server].StartView(context.Background(), svArgs)
 			}(i)
 		}

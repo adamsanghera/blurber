@@ -7,6 +7,7 @@ package pbdaemon
 //
 
 import (
+	"context"
 	"log"
 	"net"
 	"sync"
@@ -106,6 +107,14 @@ func (srv *PBServer) StopGRPCServer() {
 	}
 
 	srv.grpcServer.Stop()
+}
+
+func (srv *PBServer) PropagateCommitsUnsafe() {
+	for idx, client := range srv.peers {
+		if idx != int(srv.me) {
+			go client.Prepare(context.Background(), &replication.PrepareArgs{View: srv.currentView, PrimaryCommit: srv.commitIndex, Index: -1, Entry: nil})
+		}
+	}
 }
 
 // NewReplicationDaemon spawns a new replication daemon.

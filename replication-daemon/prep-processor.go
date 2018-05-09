@@ -30,6 +30,19 @@ func (srv *PBServer) prepareProcessor() {
 
 		} else {
 			// Check if it's just a commitIdx update
+			if callArg.args.Index == -1 && callArg.args.Entry == nil {
+				srv.mu.Lock()
+				if int32(len(srv.log)-1) >= callArg.args.PrimaryCommit {
+					for idx := srv.commitIndex + 1; idx <= callArg.args.PrimaryCommit; idx++ {
+						srv.CommitChan <- srv.log[idx]
+					}
+					srv.commitIndex = callArg.args.PrimaryCommit
+				}
+				callArg.callback <- true
+				srv.mu.Unlock()
+				continue
+			}
+
 			log.Printf("Server %d: CPP: appending {%d} to backlog\n", srv.me, callArg.args.Index)
 			// Append the received prepare to the log
 			recvdArgs = append(recvdArgs, callArg)
@@ -40,6 +53,7 @@ func (srv *PBServer) prepareProcessor() {
 			})
 
 			log.Printf("Server %d: CPP: after sorting, backlog is %v\n", srv.me, recvdArgs[0].args.Index)
+
 			// While the youngest argument is the next index we're looking for
 			srv.mu.Lock()
 			for len(recvdArgs) > 0 && recvdArgs[0].args.Index == int32(len(srv.log)) {

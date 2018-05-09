@@ -2,6 +2,7 @@ package pbdaemon
 
 import (
 	"errors"
+	"fmt"
 	"log"
 
 	"github.com/adamsanghera/blurber-protobufs/dist/replication"
@@ -14,7 +15,7 @@ func (srv *PBServer) Replicate(cmd *replication.Command) error {
 
 	// If we're panicking or not the primary, quit quit quit
 	if srv.status != NORMAL {
-		return errors.New("Replication Daemon is not OK right now")
+		return fmt.Errorf("Replication Daemon is not OK, but rather %d right now", srv.status)
 	} else if GetPrimary(srv.currentView, int32(len(srv.peers))) != srv.me {
 		return errors.New("Replication Daemon is *not* the master daemon")
 	}

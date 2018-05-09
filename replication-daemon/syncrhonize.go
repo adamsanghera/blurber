@@ -53,6 +53,7 @@ func (srv *PBServer) syncrhonize(index int32, view int32, commit int32, command 
 					srv.CommitChan <- srv.log[idx]
 				}
 				srv.commitIndex = index
+				srv.PropagateCommitsUnsafe()
 			}
 		}
 		srv.mu.Unlock()
