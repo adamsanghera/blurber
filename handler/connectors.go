@@ -136,7 +136,7 @@ func (c *config) toSubDBs() subscription.SubscriptionDBClient {
 	c.muts.subMut.Lock()
 	defer c.muts.subMut.Unlock()
 
-	addr := "127.0.0.1" + c.leaders.sub[:len(c.leaders.sub)-1] + "0"
+	addr := c.addresses.blurbDB[:len(c.addresses.blurbDB)-5] + c.leaders.sub[:len(c.leaders.sub)-1] + "0"
 
 	if c.connections.subs[addr].GetState() != connectivity.Ready {
 		log.Printf("SERVER: Leader connection %s is not ready... calling an election", c.leaders.sub)
