@@ -37,7 +37,7 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 	defer cancel()
 
 	// Reset token
-	userDB.CheckOut(ctx, &user.SessionCredentials{
+	configuration.toUserDB().CheckOut(ctx, &user.SessionCredentials{
 		Username: cookieUsername.Value,
 		Token:    cookieToken.Value})
 	if err != nil {

@@ -64,7 +64,7 @@ func Auth(w http.ResponseWriter, r *http.Request) {
 			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			defer cancel()
 
-			_, err := userDB.Add(ctx, &user.Credentials{Username: username, Password: password})
+			_, err := configuration.toUserDB().Add(ctx, &user.Credentials{Username: username, Password: password})
 
 			if err != nil {
 				errMsg.ErrMsg = err.Error()
@@ -81,7 +81,7 @@ func Auth(w http.ResponseWriter, r *http.Request) {
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
 
-		token, err := userDB.LogIn(ctx, &user.Credentials{Username: username, Password: password})
+		token, err := configuration.toUserDB().LogIn(ctx, &user.Credentials{Username: username, Password: password})
 		if err != nil {
 			errMsg.ErrMsg = err.Error()
 			t.Execute(w, errMsg)

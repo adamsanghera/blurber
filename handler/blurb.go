@@ -51,7 +51,7 @@ func Blurb(w http.ResponseWriter, r *http.Request) {
 			defer cancel()
 
 			// Retrieve uid
-			usrID, err := userDB.GetID(ctx, &user.Username{Username: username})
+			usrID, err := configuration.toUserDB().GetID(ctx, &user.Username{Username: username})
 			if err != nil {
 				w.Write([]byte("Something went wrong\n\terr: " + err.Error()))
 				return
@@ -61,7 +61,7 @@ func Blurb(w http.ResponseWriter, r *http.Request) {
 			// TODO: Validate content to be non-empty
 			content := r.Form.Get("blurb-write-text")
 
-			_, err = blurbDB.Add(ctx, &blurb.NewBlurb{
+			_, err = configuration.toBlurbDB().Add(ctx, &blurb.NewBlurb{
 				Author:   usrID,
 				Content:  content,
 				Username: username,
@@ -81,7 +81,7 @@ func Blurb(w http.ResponseWriter, r *http.Request) {
 			defer cancel()
 
 			// Retrieve uid
-			usrID, err := userDB.GetID(ctx, &user.Username{Username: username})
+			usrID, err := configuration.toUserDB().GetID(ctx, &user.Username{Username: username})
 			if err != nil {
 				w.Write([]byte("Something went wrong\n\terr: " + err.Error()))
 				return
@@ -90,7 +90,7 @@ func Blurb(w http.ResponseWriter, r *http.Request) {
 			sBid := r.Form.Get("remove-bid")
 			bid, _ := strconv.Atoi(sBid)
 
-			blurbDB.Delete(ctx, &blurb.BlurbIndex{
+			configuration.toBlurbDB().Delete(ctx, &blurb.BlurbIndex{
 				Author:  usrID,
 				BlurbID: int32(bid),
 			})
