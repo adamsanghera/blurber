@@ -56,17 +56,16 @@ These will be managed in branches:
     - [X] Background thread for processing the buffered commit channel
     - [X] No state changes outside of background thread
     - [X] Unit tests proving it all works
-1. [ ] Node failure
-    - [ ] Proving failover security at the daemon level, with unit tests proving efficacy
-    - [ ] Proving failover security at the backend-tier level, with unit tests proving efficacy
-    - [ ] Integrating leader failover security into the front-end, maintaining a peers list of backend services, to pivot between on lack of contact
+1. [X] Node failure
+    - [X] Proving failover security at the daemon level, with unit tests proving efficacy
+    - [X] Proving failover security at the backend-tier level, with unit tests proving efficacy
+    - [X] Integrating leader failover security into the front-end, maintaining a peers list of backend services, to pivot between on lack of contact
 
 ## How to run
 
-1. `cd` your way into `./protobufs`, and exec `./compile.sh`.
-1. `cd` your way into `./` and exec `./spinBackend.sh`
-1. `cd` your way into `./` and exec `.runLocal.sh`, if the backend servers are on your laptop.  Otherwise, exec `./run.sh` if the backend is on the linode server.
-1. Point your favorite browser @ `http://localhost:4000`
+1. `cd` your way into `./` and exec `./spinBackend.sh` to spin out all the non-frontend servers
+1. `cd` your way into `./` and exec `.runLocal.sh`, if your FE server is on your lapto.  Otherwise, exec `./run.sh` if the backend is on the linode server.
+1. Point your favorite browser @ `http://localhost:4000` if the FE server is running locally, or `http://172.104.24.141:4000` if the FE server is running on linode
 1. When you're done playing around, exec `./killBackend.sh`
 
 ## In the Wild
