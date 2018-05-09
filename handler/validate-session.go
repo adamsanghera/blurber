@@ -37,7 +37,7 @@ func validateSession(w http.ResponseWriter, r *http.Request) (bool, string) {
 	defer cancel()
 
 	// Make sure that the token matches the username
-	token, err := userDB.CheckIn(ctx, &user.SessionCredentials{
+	token, err := configuration.toUserDB().CheckIn(ctx, &user.SessionCredentials{
 		Username: cookieUsername.Value,
 		Token:    cookieToken.Value})
 	if err != nil {

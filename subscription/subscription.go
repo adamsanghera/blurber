@@ -5,13 +5,6 @@ import (
 	"sync"
 )
 
-// Ledger is the interface for a service that maintains a
-// record of follower-leader relationships in a social graph.
-type Ledger interface {
-	AddSub(followerID int32, leadearID int32)
-	RemoveSub(followerID int32, leadearID int32)
-}
-
 // LocalLedger implements the Ledger interface,
 // by maintaining an in-memory record of follower-leader relationships.
 type LocalLedger struct {
@@ -92,6 +85,15 @@ func (ll *LocalLedger) RemoveUser(uid int32) {
 	// Range over leaders
 	for _, leader := range leaders {
 		ll.RemoveSub(uid, leader) // removes from both lists
+	}
+
+	followers, err := ll.GetFollowers(uid)
+	if err != nil {
+		panic("SUB-LEDGER can't get leaders")
+	}
+
+	for _, follower := range followers {
+		ll.RemoveSub(follower, uid)
 	}
 
 	// Delete leader and follower lists for uid

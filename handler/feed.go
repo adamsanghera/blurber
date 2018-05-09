@@ -35,14 +35,16 @@ func Feed(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	uid, err := userDB.GetID(ctx, &user.Username{Username: uname})
+	uid, err := configuration.toUserDB().GetID(ctx, &user.Username{Username: uname})
 	if err != nil {
 		w.Write([]byte("Something went very wrong"))
 		panic(err)
 	}
 
 	// Get the leader map for UID
-	leaderSet, err := subDB.GetLeadersOf(ctx, uid)
+	client := configuration.toSubDBs()
+	log.Printf("%v", client)
+	leaderSet, err := client.GetLeadersOf(ctx, uid)
 	if err != nil {
 		w.Write([]byte("Something went very wrong"))
 		panic(err)
@@ -52,7 +54,7 @@ func Feed(w http.ResponseWriter, r *http.Request) {
 	// defer cancel()
 
 	// Generate the feed
-	bs, err := blurbDB.GenerateFeed(ctx, &blurb.FeedParameters{
+	bs, err := configuration.toBlurbDB().GenerateFeed(ctx, &blurb.FeedParameters{
 		RequestorID: uid,
 		LeaderIDs:   leaderSet.Users,
 	})
