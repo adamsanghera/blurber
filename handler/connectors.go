@@ -45,31 +45,28 @@ type config struct {
 	}
 }
 
+type vote struct {
+	err  error
+	info *common.ServerInfo
+}
+
 // updateLeaders performs a parallelized poll of the gRPC servers, to determine
 // which is the leader
 func (c *config) updateLeaders() {
 	c.muts.subMut.Lock()
 	defer c.muts.subMut.Unlock()
-	voteChannel := make(chan *common.ServerInfo)
+	voteChannel := make(chan vote)
 	for addr, client := range c.clients.subDBs {
 
 		// Spawn a function to get a vote from every client
-		go func(vChan chan *common.ServerInfo, addr string, subclient subscription.SubscriptionDBClient) {
+		go func(vChan chan vote, addr string, subclient subscription.SubscriptionDBClient) {
 			ctx, cancel := context.WithTimeout(context.Background(), time.Second*1)
 			info, err := subclient.Leader(ctx, &common.Empty{})
-			if err != nil {
-				log.Printf("SERVER CONN: Failed to contact %s, with msg {%s}", addr, err.Error())
-				if addr == c.leaders.sub {
-					// prompt view change
-					defer c.updateLeaders()
-					for addr, client := range c.clients.subDBs {
-						if c.connections.subs[addr].GetState() == connectivity.Ready {
-							client.PromptViewChange()
-						}
-					}
-				}
+			if info == nil {
+				vChan <- vote{err, &common.ServerInfo{Address: addr[len(addr)-5:len(addr)-1] + "1", Index: -1}}
+			} else {
+				vChan <- vote{err, info}
 			}
-			vChan <- info
 			cancel()
 		}(voteChannel, addr, client)
 
@@ -79,10 +76,29 @@ func (c *config) updateLeaders() {
 
 	for range c.clients.subDBs {
 		vote := <-voteChannel
-		if _, exists := voteBox[vote.Address]; !exists {
-			voteBox[vote.Address] = 0
+		if vote.err != nil {
+			voterAddr := vote.info.Address
+
+			log.Printf("SERVER CONN: Failed to contact %s, with msg {%s}", voterAddr, vote.err.Error())
+			// Only call for a view change if the absent voter is the leader
+			// log.Printf("Testing: %s == %s", voterAddr[len(voterAddr)-4:len(voterAddr)-1], c.leaders.sub[1:4])
+			if voterAddr[len(voterAddr)-5:len(voterAddr)-1] == c.leaders.sub[:4] {
+				// prompt view change
+				for addr, client := range c.clients.subDBs {
+					if c.connections.subs[addr].GetState() == connectivity.Ready {
+						log.Printf("Prompting view change at %s", addr)
+						_, err := client.PromptViewChange(context.Background(), &common.Empty{})
+						if err != nil {
+							log.Printf("SERVER CONN: Failed to prompt view change at %s, err msg {%s}", addr, err.Error())
+						}
+					}
+				}
+			}
 		}
-		voteBox[vote.Address]++
+		if _, exists := voteBox[vote.info.Address]; !exists {
+			voteBox[vote.info.Address] = 0
+		}
+		voteBox[vote.info.Address]++
 	}
 
 	winner := ""
@@ -120,7 +136,9 @@ func (c *config) toSubDBs() subscription.SubscriptionDBClient {
 	c.muts.subMut.Lock()
 	defer c.muts.subMut.Unlock()
 
-	if c.connections.subs[c.leaders.sub].GetState() != connectivity.Ready {
+	addr := "127.0.0.1" + c.leaders.sub[:len(c.leaders.sub)-1] + "0"
+
+	if c.connections.subs[addr].GetState() != connectivity.Ready {
 		log.Printf("SERVER: Leader connection %s is not ready... calling an election", c.leaders.sub)
 
 		// Need to release lock for the election
@@ -129,7 +147,7 @@ func (c *config) toSubDBs() subscription.SubscriptionDBClient {
 		c.muts.subMut.Lock()
 	}
 
-	return c.clients.subDBs[c.leaders.sub]
+	return c.clients.subDBs[addr]
 }
 
 func getAddress(envName string) string {

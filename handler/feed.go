@@ -42,7 +42,9 @@ func Feed(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get the leader map for UID
-	leaderSet, err := configuration.toSubDBs().GetLeadersOf(ctx, uid)
+	client := configuration.toSubDBs()
+	log.Printf("%v", client)
+	leaderSet, err := client.GetLeadersOf(ctx, uid)
 	if err != nil {
 		w.Write([]byte("Something went very wrong"))
 		panic(err)

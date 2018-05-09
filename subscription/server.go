@@ -92,7 +92,7 @@ func (ls *LedgerServer) Leader(ctx context.Context, in *common.Empty) (*common.S
 }
 
 func (ls *LedgerServer) PromptViewChange(ctx context.Context, in *common.Empty) (*common.Empty, error) {
-	ls.replicationDaemon.PromptViewChange(ls.replicationDaemon.GetView())
+	ls.replicationDaemon.PromptViewChange(ls.replicationDaemon.GetView() + 1)
 	return &common.Empty{}, nil
 }
 

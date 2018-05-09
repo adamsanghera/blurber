@@ -2,6 +2,7 @@ package pbdaemon
 
 import (
 	"context"
+	"log"
 
 	"github.com/adamsanghera/blurber-protobufs/dist/replication"
 )
@@ -11,6 +12,9 @@ import (
 func (srv *PBServer) PromptViewChange(newView int32) {
 	srv.mu.Lock()
 	defer srv.mu.Unlock()
+
+	log.Printf("Received PVC request with view num %d", newView)
+
 	newPrimary := GetPrimary(newView, int32(len(srv.peers)))
 
 	if newPrimary != srv.me { //only primary of newView should do view change

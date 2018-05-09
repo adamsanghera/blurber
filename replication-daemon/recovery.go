@@ -2,6 +2,7 @@ package pbdaemon
 
 import (
 	"log"
+	"time"
 
 	"golang.org/x/net/context"
 
@@ -128,5 +129,7 @@ func (srv *PBServer) sendRecovery() {
 				srv.currentView = rep.View
 			}
 		}
+
+		time.Sleep(1 * time.Second)
 	}
 }
